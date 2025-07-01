@@ -1,0 +1,155 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 32px;
+  font-size: 2.2rem;
+  color: #1976d2;
+  letter-spacing: 1px;
+}
+
+.bolepix-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bolepix-form input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1.1rem;
+}
+
+.bolepix-form button {
+  padding: 12px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bolepix-form button:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.result {
+  margin-top: 32px;
+  background: #f5f5f5;
+  padding: 24px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  color: #222;
+}
+
+.result h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 1.5rem;
+  color: #1976d2;
+}
+
+.result p {
+  margin: 10px 0;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+  color: #222;
+}
+
+.result p:last-child {
+  border-bottom: none;
+}
+
+.result b {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.result img.qrcode {
+  margin-top: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-width: 220px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.result small {
+  display: block;
+  margin-top: 6px;
+  color: #555;
+  word-break: break-all;
+  text-align: center;
+}
+
+.result a {
+  color: #1976d2;
+  font-weight: 600;
+  text-decoration: underline;
+}

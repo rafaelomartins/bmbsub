@@ -58,6 +58,15 @@ h1 {
   letter-spacing: 1px;
 }
 
+.bemobi-title {
+  text-align: center;
+  color: #1976d2;
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+  margin-top: -10px;
+  letter-spacing: 1px;
+}
+
 .bolepix-form {
   display: flex;
   flex-direction: column;

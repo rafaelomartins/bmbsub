@@ -1,0 +1,9 @@
+   git init
+   
+   
+   cd /home/rafael/Área\ de\ Trabalho/Dev-SUB/API-Consultas/frontend
+   npm run dev -- --host
+
+
+        cd /home/rafael/Área\ de\ Trabalho/Dev-SUB/API-Consultas/backend
+  node index.js

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import './App.css'
 import bemobiLogo from './logobemobi.png'
+import Login from './Login'
 
 // Função para formatar valores em reais
 const formatCurrency = (value) => {
@@ -73,9 +74,13 @@ function Antifraude() {
     setResult(null);
     setCurrentPage(1);
     try {
+      const token = localStorage.getItem('authToken');
       const res = await fetch('http://localhost:3001/api/antifraude', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ table: selectedTable, document }),
       });
       if (!res.ok) {
@@ -450,9 +455,13 @@ function BolepixAE() {
     setError('');
     setResult(null);
     try {
+      const token = localStorage.getItem('authToken');
       const res = await fetch('http://localhost:3001/api/bolepix', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(form),
       });
       if (!res.ok) {
@@ -1600,10 +1609,12 @@ function Pagamentos({ submenu }) {
     
     try {
       const endpoint = submenu === 'gma' ? '/api/pagamentos/gma' : '/api/pagamentos/posnegado';
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`http://localhost:3001${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(filters)
       });
@@ -2168,7 +2179,98 @@ const calendarIconStyle = {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   
+  // Verificar autenticação ao carregar
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('authToken');
+      const savedUser = localStorage.getItem('user');
+      
+      if (token && savedUser) {
+        try {
+          // Verificar se o token ainda é válido
+          const response = await fetch('http://localhost:3001/api/auth/verify', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            setIsAuthenticated(true);
+            setUser(JSON.parse(savedUser));
+          } else {
+            // Token inválido, limpar localStorage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+          }
+        } catch (error) {
+          console.error('Erro ao verificar autenticação:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+        }
+      }
+      setLoading(false);
+    };
+    
+    checkAuth();
+  }, []);
+
+  const handleLogin = (data) => {
+    setIsAuthenticated(true);
+    setUser(data.user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setUser(null);
+  };
+
+  // Função para adicionar token às requisições
+  const fetchWithAuth = async (url, options = {}) => {
+    const token = localStorage.getItem('authToken');
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  };
+
+  // Mostrar loading enquanto verifica autenticação
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
+        <div style={{
+          background: '#fff',
+          padding: '40px',
+          borderRadius: '20px',
+          textAlign: 'center',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+        }}>
+          <img src={bemobiLogo} alt="Bemobi" style={{ maxWidth: '150px', marginBottom: '20px' }} />
+          <p style={{ color: '#666', margin: '0' }}>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar tela de login se não autenticado
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <Router>
       <div className="app-layout">
@@ -2206,13 +2308,54 @@ function App() {
             </ul>
           </nav>
           
-          <button 
-            className="mobile-menu-toggle" 
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? '✖' : '☰'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            {/* Informações do usuário */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              color: '#fff',
+              fontSize: '14px'
+            }}>
+              <span>👤 {user?.name}</span>
+              <span style={{ 
+                background: user?.role === 'admin' ? '#ff9800' : '#4caf50',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '600'
+              }}>
+                {user?.role === 'admin' ? 'ADMIN' : 'USER'}
+              </span>
+            </div>
+            
+            {/* Botão de logout */}
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => (e.target.style.background = 'rgba(255,255,255,0.2)')}
+              onMouseOut={(e) => (e.target.style.background = 'rgba(255,255,255,0.1)')}
+            >
+              🚪 Sair
+            </button>
+            
+            <button 
+              className="mobile-menu-toggle" 
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? '✖' : '☰'}
+            </button>
+          </div>
         </header>
         
         <main className="main-content">

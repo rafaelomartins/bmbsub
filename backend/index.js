@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const { Pool } = require('pg');
+const { login, registerUser, authenticateToken } = require('./auth');
 
 const app = express();
 app.use(express.json());
@@ -15,6 +16,51 @@ const pool = new Pool({
   port: 5439,
   ssl: { rejectUnauthorized: false }
 });
+
+// Rota de login
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+  }
+
+  try {
+    const result = await login(email, password);
+    res.json(result);
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+});
+
+// Rota para registrar novo usuário (apenas admin)
+app.post('/api/auth/register', authenticateToken, async (req, res) => {
+  // Verificar se o usuário é admin
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem registrar usuários' });
+  }
+
+  const { email, password, name, role } = req.body;
+
+  if (!email || !password || !name) {
+    return res.status(400).json({ error: 'Email, senha e nome são obrigatórios' });
+  }
+
+  try {
+    const newUser = await registerUser(email, password, name, role);
+    res.json({ message: 'Usuário registrado com sucesso', user: newUser });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Rota para verificar token
+app.get('/api/auth/verify', authenticateToken, (req, res) => {
+  res.json({ user: req.user });
+});
+
+// Middleware para proteger todas as rotas abaixo
+app.use('/api', authenticateToken);
 
 app.post('/api/bolepix', async (req, res) => {
   const { correlation_id, application_id, workspace_id, company_id } = req.body;

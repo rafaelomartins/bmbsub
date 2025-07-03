@@ -2,6 +2,21 @@
 
 Portal web interno para consultas e operações relacionadas a pagamentos, antifraude, integração Cielo e diagnósticos financeiros da Bemobi.
 
+## 🔐 Sistema de Autenticação
+
+O portal possui sistema de autenticação privado com as seguintes características:
+
+- **Acesso Restrito**: Apenas usuários com email @bemobi.com
+- **Login Seguro**: Autenticação com JWT (JSON Web Token)
+- **Validação de Domínio**: Verificação automática de emails @bemobi.com
+- **Sessões**: Tokens válidos por 8 horas
+- **Logout**: Encerramento seguro de sessões
+
+### Credenciais de Teste
+- **Email**: rafael.oliveira@bemobi.com
+- **Senha**: password
+- **Tipo**: Administrador
+
 ## 🚀 Funcionalidades
 
 ### 📊 Consultas Antifraude

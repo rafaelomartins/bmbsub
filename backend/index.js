@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const { Pool } = require('pg');
-const { login, registerUser, authenticateToken, getAllUsers, resetUserPassword, deleteUser } = require('./auth');
+const { login, registerUser, authenticateToken, getAllUsers, resetUserPassword, deleteUser, updateUserPermissions, getAvailablePermissions } = require('./auth');
 
 const app = express();
 app.use(express.json());
@@ -106,6 +106,41 @@ app.delete('/api/auth/users/:userId', authenticateToken, (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Rota para atualizar permissões de usuário (apenas admin)
+app.put('/api/auth/users/:userId/permissions', authenticateToken, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem atualizar permissões' });
+  }
+
+  const { userId } = req.params;
+  const { permissions } = req.body;
+
+  if (!permissions || !Array.isArray(permissions)) {
+    return res.status(400).json({ error: 'Permissões devem ser fornecidas como um array' });
+  }
+
+  try {
+    const updatedUser = updateUserPermissions(userId, permissions);
+    res.json({ message: 'Permissões atualizadas com sucesso', user: updatedUser });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Rota para obter permissões disponíveis (apenas admin)
+app.get('/api/auth/permissions', authenticateToken, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem acessar esta rota' });
+  }
+
+  try {
+    const permissions = getAvailablePermissions();
+    res.json({ permissions });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

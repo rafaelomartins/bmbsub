@@ -27,7 +27,7 @@ const formatCurrency = (value) => {
 function Home() {
   return (
     <div className="home-container">
-      <h2>Bem-vindo ao Portal de Consultas Bemobi</h2>
+      <h2>Bem-vindo ao Portal de Consultas Subadquirência Bemobi</h2>
       <p>Selecione uma opção no menu para começar.</p>
     </div>
   );
@@ -2278,35 +2278,57 @@ function App() {
         <header className="top-navbar">
           <div className="navbar-brand">
             <img src={bemobiLogo} alt="Bemobi" className="navbar-logo" />
-            <span className="navbar-title">Portal de Consultas</span>
+            <span className="navbar-title">Portal de Consultas Subadquirência</span>
           </div>
           
           <nav className={`navbar-menu ${menuOpen ? 'open' : ''}`}>
             <ul className="navbar-nav">
-              <li><NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>🏠 Principal</NavLink></li>
-              <li><NavLink to="/antifraude" className={({ isActive }) => isActive ? 'active' : ''}>🛡️ Consultas de Prevenção</NavLink></li>
-              <li><NavLink to="/bolepix" className={({ isActive }) => isActive ? 'active' : ''}>💳 Consulta BolePIX AE</NavLink></li>
-              <li className="dropdown">
-                <span className="dropdown-toggle">
-                  🏦 Cielo ▼
-                </span>
-                <ul className="dropdown-menu">
-                  <li><NavLink to="/cielo/gerar-token" className={({ isActive }) => isActive ? 'active' : ''}>🔑 Gerar Token</NavLink></li>
-                  <li><NavLink to="/cielo/solicitar-cancelamento" className={({ isActive }) => isActive ? 'active' : ''}>❌ Solicitar Cancelamento</NavLink></li>
-                  <li><NavLink to="/cielo/carta-cancelamento" className={({ isActive }) => isActive ? 'active' : ''}>📄 Carta de Cancelamento</NavLink></li>
-                  <li><NavLink to="/cielo/cancelamento-pm" className={({ isActive }) => isActive ? 'active' : ''}>🔄 Cancelamento PM</NavLink></li>
-                </ul>
-              </li>
-              <li className="dropdown">
-                <span className="dropdown-toggle">
-                  💸 Pagamentos ▼
-                </span>
-                <ul className="dropdown-menu">
-                  <li><NavLink to="/pagamentos/gma" className={({ isActive }) => isActive ? 'active' : ''}>Web - PIX (GMA)</NavLink></li>
-                  <li><NavLink to="/pagamentos/posnegado" className={({ isActive }) => isActive ? 'active' : ''}>Pagamento POS Negado</NavLink></li>
-                </ul>
-              </li>
-              {user?.role === 'admin' && (
+              {(user?.role === 'admin' || user?.permissions?.includes('home')) && (
+                <li><NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''}>🏠 Principal</NavLink></li>
+              )}
+              {(user?.role === 'admin' || user?.permissions?.includes('antifraude')) && (
+                <li><NavLink to="/antifraude" className={({ isActive }) => isActive ? 'active' : ''}>🛡️ Consultas de Prevenção</NavLink></li>
+              )}
+              {(user?.role === 'admin' || user?.permissions?.includes('bolepix')) && (
+                <li><NavLink to="/bolepix" className={({ isActive }) => isActive ? 'active' : ''}>💳 Consulta BolePIX AE</NavLink></li>
+              )}
+              {(user?.role === 'admin' || user?.permissions?.includes('cielo_gerar_token') || user?.permissions?.includes('cielo_solicitar_cancelamento') || user?.permissions?.includes('cielo_carta_cancelamento') || user?.permissions?.includes('cielo_cancelamento_pm')) && (
+                <li className="dropdown">
+                  <span className="dropdown-toggle">
+                    🏦 Cielo ▼
+                  </span>
+                  <ul className="dropdown-menu">
+                    {(user?.role === 'admin' || user?.permissions?.includes('cielo_gerar_token')) && (
+                      <li><NavLink to="/cielo/gerar-token" className={({ isActive }) => isActive ? 'active' : ''}>🔑 Gerar Token</NavLink></li>
+                    )}
+                    {(user?.role === 'admin' || user?.permissions?.includes('cielo_solicitar_cancelamento')) && (
+                      <li><NavLink to="/cielo/solicitar-cancelamento" className={({ isActive }) => isActive ? 'active' : ''}>❌ Solicitar Cancelamento</NavLink></li>
+                    )}
+                    {(user?.role === 'admin' || user?.permissions?.includes('cielo_carta_cancelamento')) && (
+                      <li><NavLink to="/cielo/carta-cancelamento" className={({ isActive }) => isActive ? 'active' : ''}>📄 Carta de Cancelamento</NavLink></li>
+                    )}
+                    {(user?.role === 'admin' || user?.permissions?.includes('cielo_cancelamento_pm')) && (
+                      <li><NavLink to="/cielo/cancelamento-pm" className={({ isActive }) => isActive ? 'active' : ''}>🔄 Cancelamento PM</NavLink></li>
+                    )}
+                  </ul>
+                </li>
+              )}
+              {(user?.role === 'admin' || user?.permissions?.includes('pagamentos_gma') || user?.permissions?.includes('pagamentos_posnegado')) && (
+                <li className="dropdown">
+                  <span className="dropdown-toggle">
+                    💸 Pagamentos ▼
+                  </span>
+                  <ul className="dropdown-menu">
+                    {(user?.role === 'admin' || user?.permissions?.includes('pagamentos_gma')) && (
+                      <li><NavLink to="/pagamentos/gma" className={({ isActive }) => isActive ? 'active' : ''}>Web - PIX (GMA)</NavLink></li>
+                    )}
+                    {(user?.role === 'admin' || user?.permissions?.includes('pagamentos_posnegado')) && (
+                      <li><NavLink to="/pagamentos/posnegado" className={({ isActive }) => isActive ? 'active' : ''}>Pagamento POS Negado</NavLink></li>
+                    )}
+                  </ul>
+                </li>
+              )}
+              {(user?.role === 'admin' || user?.permissions?.includes('usuarios')) && (
                 <li><NavLink to="/usuarios" className={({ isActive }) => isActive ? 'active' : ''}>👥 Gerenciar Usuários</NavLink></li>
               )}
             </ul>
@@ -2331,6 +2353,7 @@ function App() {
               }}>
                 {user?.role === 'admin' ? 'ADMIN' : 'USER'}
               </span>
+
             </div>
             
             {/* Botão de logout */}

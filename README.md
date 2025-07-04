@@ -1,4 +1,4 @@
-# 🏦 Portal de Consultas Bemobi
+# 🏦 Portal de Consultas Subadquirência Bemobi
 
 Portal web interno para consultas e operações relacionadas a pagamentos, antifraude, integração Cielo e diagnósticos financeiros da Bemobi.
 

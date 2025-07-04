@@ -88,7 +88,7 @@ function Login({ onLogin }) {
             fontWeight: '700',
             margin: '0 0 10px 0'
           }}>
-            Portal de Consultas
+            Portal de Consultas Subadquirência
           </h1>
           <p style={{
             color: '#666',

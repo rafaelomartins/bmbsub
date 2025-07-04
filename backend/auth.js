@@ -4,6 +4,20 @@ const jwt = require('jsonwebtoken');
 // Chave secreta para JWT (em produção, usar variável de ambiente)
 const JWT_SECRET = process.env.JWT_SECRET || 'bemobi-secret-key-2024';
 
+// Permissões disponíveis no sistema
+const PERMISSIONS = {
+  HOME: 'home',
+  ANTIFRAUDE: 'antifraude',
+  BOLEPIX: 'bolepix',
+  CIELO_GERAR_TOKEN: 'cielo_gerar_token',
+  CIELO_SOLICITAR_CANCELAMENTO: 'cielo_solicitar_cancelamento',
+  CIELO_CARTA_CANCELAMENTO: 'cielo_carta_cancelamento',
+  CIELO_CANCELAMENTO_PM: 'cielo_cancelamento_pm',
+  PAGAMENTOS_GMA: 'pagamentos_gma',
+  PAGAMENTOS_POSNEGADO: 'pagamentos_posnegado',
+  USUARIOS: 'usuarios'
+};
+
 // Usuários mockados (em produção, usar banco de dados)
 const users = [
   {
@@ -11,14 +25,16 @@ const users = [
     email: 'rafael.oliveira@bemobi.com',
     password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
     name: 'Rafael Oliveira',
-    role: 'admin'
+    role: 'admin',
+    permissions: Object.values(PERMISSIONS) // Admin tem todas as permissões
   },
   {
     id: 2,
     email: 'admin@bemobi.com',
     password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
     name: 'Administrador',
-    role: 'admin'
+    role: 'admin',
+    permissions: Object.values(PERMISSIONS) // Admin tem todas as permissões
   }
 ];
 
@@ -46,7 +62,8 @@ const generateToken = (user) => {
       id: user.id, 
       email: user.email, 
       name: user.name, 
-      role: user.role 
+      role: user.role,
+      permissions: user.permissions || []
     },
     JWT_SECRET,
     { expiresIn: '8h' }
@@ -108,7 +125,8 @@ const login = async (email, password) => {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+      permissions: user.permissions || []
     }
   };
 };
@@ -135,7 +153,8 @@ const registerUser = async (email, password, name, role = 'user') => {
     email,
     password: hashedPassword,
     name,
-    role
+    role,
+    permissions: role === 'admin' ? Object.values(PERMISSIONS) : [] // Admin tem todas, usuário comum tem nenhuma
   };
 
   users.push(newUser);
@@ -144,7 +163,8 @@ const registerUser = async (email, password, name, role = 'user') => {
     id: newUser.id,
     email: newUser.email,
     name: newUser.name,
-    role: newUser.role
+    role: newUser.role,
+    permissions: newUser.permissions
   };
 };
 
@@ -154,7 +174,8 @@ const getAllUsers = () => {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role
+    role: user.role,
+    permissions: user.permissions || []
   }));
 };
 
@@ -173,7 +194,8 @@ const resetUserPassword = async (userId, newPassword) => {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role
+    role: user.role,
+    permissions: user.permissions || []
   };
 };
 
@@ -193,6 +215,47 @@ const deleteUser = (userId) => {
   return { message: 'Usuário deletado com sucesso' };
 };
 
+// Função para atualizar permissões de usuário (apenas admin)
+const updateUserPermissions = (userId, permissions) => {
+  const user = users.find(u => u.id === parseInt(userId));
+  if (!user) {
+    throw new Error('Usuário não encontrado');
+  }
+
+  // Administradores sempre têm todas as permissões (não podem ser alteradas)
+  if (user.role === 'admin') {
+    user.permissions = Object.values(PERMISSIONS);
+  } else {
+    // Usuários normais: validar e aplicar apenas permissões válidas
+    const validPermissions = permissions.filter(p => Object.values(PERMISSIONS).includes(p));
+    user.permissions = validPermissions;
+  }
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    permissions: user.permissions
+  };
+};
+
+// Função para obter permissões disponíveis
+const getAvailablePermissions = () => {
+  return {
+    [PERMISSIONS.HOME]: 'Principal',
+    [PERMISSIONS.ANTIFRAUDE]: 'Consultas de Prevenção',
+    [PERMISSIONS.BOLEPIX]: 'Consulta BolePIX AE',
+    [PERMISSIONS.CIELO_GERAR_TOKEN]: 'Cielo - Gerar Token',
+    [PERMISSIONS.CIELO_SOLICITAR_CANCELAMENTO]: 'Cielo - Solicitar Cancelamento',
+    [PERMISSIONS.CIELO_CARTA_CANCELAMENTO]: 'Cielo - Carta de Cancelamento',
+    [PERMISSIONS.CIELO_CANCELAMENTO_PM]: 'Cielo - Cancelamento PM',
+    [PERMISSIONS.PAGAMENTOS_GMA]: 'Pagamentos - Web PIX (GMA)',
+    [PERMISSIONS.PAGAMENTOS_POSNEGADO]: 'Pagamentos - POS Negado',
+    [PERMISSIONS.USUARIOS]: 'Gerenciar Usuários'
+  };
+};
+
 module.exports = {
   login,
   registerUser,
@@ -203,5 +266,8 @@ module.exports = {
   getAllUsers,
   resetUserPassword,
   deleteUser,
-  users
+  updateUserPermissions,
+  getAvailablePermissions,
+  users,
+  PERMISSIONS
 }; 

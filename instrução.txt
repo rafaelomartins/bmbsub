@@ -1,5 +1,7 @@
    git init
-   
+   git add .
+   git commit -m "Initial commit: Portal de Consultas Subadquirência Bemobi - Sistema completo de consultas e operações financeiras"
+
    
    cd /home/rafael/Área\ de\ Trabalho/Dev-SUB/API-Consultas/frontend
    npm run dev -- --host

@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const { Pool } = require('pg');
-const { login, registerUser, authenticateToken } = require('./auth');
+const { login, registerUser, authenticateToken, getAllUsers, resetUserPassword, deleteUser } = require('./auth');
 
 const app = express();
 app.use(express.json());
@@ -57,6 +57,56 @@ app.post('/api/auth/register', authenticateToken, async (req, res) => {
 // Rota para verificar token
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
   res.json({ user: req.user });
+});
+
+// Rota para buscar todos os usuários (apenas admin)
+app.get('/api/auth/users', authenticateToken, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem acessar esta rota' });
+  }
+  
+  try {
+    const users = getAllUsers();
+    res.json({ users });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Rota para redefinir senha (apenas admin)
+app.post('/api/auth/reset-password', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem redefinir senhas' });
+  }
+
+  const { userId, newPassword } = req.body;
+
+  if (!userId || !newPassword) {
+    return res.status(400).json({ error: 'ID do usuário e nova senha são obrigatórios' });
+  }
+
+  try {
+    const updatedUser = await resetUserPassword(userId, newPassword);
+    res.json({ message: 'Senha redefinida com sucesso', user: updatedUser });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Rota para deletar usuário (apenas admin)
+app.delete('/api/auth/users/:userId', authenticateToken, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem deletar usuários' });
+  }
+
+  const { userId } = req.params;
+
+  try {
+    const result = deleteUser(userId);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // Middleware para proteger todas as rotas abaixo

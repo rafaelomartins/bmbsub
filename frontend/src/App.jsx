@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from 're
 import './App.css'
 import bemobiLogo from './logobemobi.png'
 import Login from './Login'
+import UserManagement from './UserManagement'
 
 // Função para formatar valores em reais
 const formatCurrency = (value) => {
@@ -75,7 +76,7 @@ function Antifraude() {
     setCurrentPage(1);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:3001/api/antifraude', {
+              const res = await fetch('/api/antifraude', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -456,7 +457,7 @@ function BolepixAE() {
     setResult(null);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:3001/api/bolepix', {
+              const res = await fetch('/api/bolepix', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -479,7 +480,7 @@ function BolepixAE() {
 
   const handleCorrelationAutoFetch = async (correlationId, updatedForm) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/correlation/${correlationId}`);
+              const res = await fetch(`/api/correlation/${correlationId}`);
       if (res.ok) {
         const data = await res.json();
         setForm({
@@ -1249,7 +1250,7 @@ function CieloCancelamentoPM() {
       setBuscando(true);
       setError('');
       setResult(null);
-      fetch(`http://localhost:3001/api/correlation/${correlationId}`)
+                  fetch(`/api/correlation/${correlationId}`)
         .then(res => res.ok ? res.json() : Promise.reject('Não encontrado'))
         .then(data => {
           console.log('Todos os dados recebidos do backend:', data);
@@ -1610,7 +1611,7 @@ function Pagamentos({ submenu }) {
     try {
       const endpoint = submenu === 'gma' ? '/api/pagamentos/gma' : '/api/pagamentos/posnegado';
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+              const response = await fetch(`${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2192,7 +2193,7 @@ function App() {
       if (token && savedUser) {
         try {
           // Verificar se o token ainda é válido
-          const response = await fetch('http://localhost:3001/api/auth/verify', {
+          const response = await fetch('/api/auth/verify', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -2305,6 +2306,9 @@ function App() {
                   <li><NavLink to="/pagamentos/posnegado" className={({ isActive }) => isActive ? 'active' : ''}>Pagamento POS Negado</NavLink></li>
                 </ul>
               </li>
+              {user?.role === 'admin' && (
+                <li><NavLink to="/usuarios" className={({ isActive }) => isActive ? 'active' : ''}>👥 Gerenciar Usuários</NavLink></li>
+              )}
             </ul>
           </nav>
           
@@ -2369,6 +2373,7 @@ function App() {
             <Route path="/cielo/cancelamento-pm" element={<CieloCancelamentoPM />} />
             <Route path="/pagamentos/gma" element={<Pagamentos submenu="gma" />} />
             <Route path="/pagamentos/posnegado" element={<Pagamentos submenu="posnegado" />} />
+            <Route path="/usuarios" element={<UserManagement />} />
           </Routes>
         </main>
       </div>

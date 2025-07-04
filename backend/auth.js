@@ -148,6 +148,51 @@ const registerUser = async (email, password, name, role = 'user') => {
   };
 };
 
+// Função para buscar todos os usuários (apenas admin)
+const getAllUsers = () => {
+  return users.map(user => ({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role
+  }));
+};
+
+// Função para redefinir senha (apenas admin)
+const resetUserPassword = async (userId, newPassword) => {
+  const user = users.find(u => u.id === parseInt(userId));
+  if (!user) {
+    throw new Error('Usuário não encontrado');
+  }
+
+  // Hash da nova senha
+  const hashedPassword = await hashPassword(newPassword);
+  user.password = hashedPassword;
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role
+  };
+};
+
+// Função para deletar usuário (apenas admin)
+const deleteUser = (userId) => {
+  const userIndex = users.findIndex(u => u.id === parseInt(userId));
+  if (userIndex === -1) {
+    throw new Error('Usuário não encontrado');
+  }
+
+  const user = users[userIndex];
+  if (user.role === 'admin') {
+    throw new Error('Não é possível deletar um administrador');
+  }
+
+  users.splice(userIndex, 1);
+  return { message: 'Usuário deletado com sucesso' };
+};
+
 module.exports = {
   login,
   registerUser,
@@ -155,5 +200,8 @@ module.exports = {
   validateBemobiEmail,
   generateToken,
   verifyToken,
+  getAllUsers,
+  resetUserPassword,
+  deleteUser,
   users
 }; 

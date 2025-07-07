@@ -144,8 +144,7 @@ app.get('/api/auth/permissions', authenticateToken, (req, res) => {
   }
 });
 
-// Middleware para proteger todas as rotas abaixo
-app.use('/api', authenticateToken);
+// Sistema sem autenticação - rotas abertas
 
 app.post('/api/bolepix', async (req, res) => {
   const { correlation_id, application_id, workspace_id, company_id } = req.body;
@@ -237,9 +236,52 @@ const fieldsToRemove = [
   'context_tags'
 ];
 
+// Rota de teste para verificar conexão com o banco
+app.get('/api/test-db', async (req, res) => {
+  try {
+    console.log('\n=== TESTE DE CONEXÃO DB ===');
+    
+    // Teste básico de conexão
+    const testResult = await pool.query('SELECT NOW() as current_time');
+    console.log('Conexão OK. Hora atual:', testResult.rows[0].current_time);
+    
+    // Testar se a tabela existe e tem dados
+    const tableTest = await pool.query(`
+      SELECT COUNT(*) as total 
+      FROM refined_service_prevention.dts_grupo_salta 
+      LIMIT 1
+    `);
+    console.log('Tabela dts_grupo_salta - Total de registros:', tableTest.rows[0].total);
+    
+    // Testar uma consulta com um documento fictício
+    const sampleQuery = await pool.query(`
+      SELECT customer_document, COUNT(*) as count
+      FROM refined_service_prevention.dts_grupo_salta 
+      GROUP BY customer_document 
+      LIMIT 5
+    `);
+    console.log('Exemplos de documentos na tabela:', sampleQuery.rows);
+    
+    res.json({
+      connection: 'OK',
+      current_time: testResult.rows[0].current_time,
+      table_count: tableTest.rows[0].total,
+      sample_documents: sampleQuery.rows
+    });
+  } catch (err) {
+    console.error('ERRO NO TESTE DB:', err);
+    res.status(500).json({ error: 'Erro ao testar banco', details: err.message });
+  }
+});
+
 app.post('/api/antifraude', async (req, res) => {
   const { table, document } = req.body;
+  console.log('\n=== NOVA REQUISIÇÃO ANTIFRAUDE ===');
+  console.log('Body recebido:', req.body);
+  console.log('Headers:', req.headers);
+  
   if (!table || !document) {
+    console.log('❌ Validação falhou: tabela ou documento em branco');
     return res.status(400).json({ error: 'Tabela e documento são obrigatórios.' });
   }
 
@@ -254,6 +296,7 @@ app.post('/api/antifraude', async (req, res) => {
   ];
   
   if (!allowedTables.includes(table)) {
+    console.log('❌ Tabela não permitida:', table);
     return res.status(400).json({ error: 'Tabela não permitida.' });
   }
 
@@ -261,11 +304,42 @@ app.post('/api/antifraude', async (req, res) => {
     console.log(`\n=== CONSULTA PREVENÇÃO ===`);
     console.log(`Tabela: ${table}`);
     console.log(`Documento: ${document}`);
+    console.log(`Schema completo: refined_service_prevention.${table}`);
     
     const query = `SELECT * FROM refined_service_prevention.${table} WHERE customer_document = $1`;
-    const result = await pool.query(query, [document]);
+    console.log('Query SQL:', query);
+    console.log('Parâmetros:', [document]);
     
-    console.log(`Registros encontrados: ${result.rows.length}`);
+    console.log('⏳ Executando query...');
+    const startTime = Date.now();
+    const result = await pool.query(query, [document]);
+    const endTime = Date.now();
+    
+    console.log(`✅ Query executada em ${endTime - startTime}ms`);
+    console.log(`📊 Registros encontrados: ${result.rows.length}`);
+    
+    if (result.rows.length > 0) {
+      console.log('📝 Primeiros campos do primeiro registro:', Object.keys(result.rows[0]).slice(0, 10));
+      console.log('📄 Primeiro registro (sample):', {
+        customer_document: result.rows[0].customer_document,
+        transaction_date: result.rows[0].transaction_date,
+        amount: result.rows[0].amount
+      });
+    } else {
+      console.log('⚠️ Nenhum registro encontrado para o documento:', document);
+      console.log('💡 Tentando buscar documentos similares...');
+      
+      // Buscar documentos que começam com os primeiros dígitos
+      const similarQuery = `
+        SELECT customer_document, COUNT(*) as count
+        FROM refined_service_prevention.${table} 
+        WHERE customer_document LIKE $1 
+        GROUP BY customer_document 
+        LIMIT 5
+      `;
+      const similarResult = await pool.query(similarQuery, [document.substring(0, 3) + '%']);
+      console.log('📋 Documentos similares encontrados:', similarResult.rows);
+    }
     
     // Remover os campos especificados dos resultados
     const filteredRows = result.rows.map(row => {
@@ -278,9 +352,11 @@ app.post('/api/antifraude', async (req, res) => {
       return filteredRow;
     });
     
+    console.log('🎯 Retornando resultados filtrados...');
     res.json(filteredRows);
   } catch (err) {
-    console.error('Erro na consulta:', err);
+    console.error('❌ ERRO NA CONSULTA:', err);
+    console.error('❌ Stack trace:', err.stack);
     res.status(500).json({ error: 'Erro ao consultar o banco', details: err.message });
   }
 });

@@ -38,7 +38,7 @@ function Home() {
 }
 
 function Antifraude() {
-  const [document, setDocument] = useState('');
+  const [documentNumber, setDocumentNumber] = useState('');
   const [selectedTable, setSelectedTable] = useState('dts_grupo_salta');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -79,14 +79,12 @@ function Antifraude() {
     setResult(null);
     setCurrentPage(1);
     try {
-      const token = localStorage.getItem('authToken');
-              const res = await fetch('/api/antifraude', {
+      const res = await fetch('/api/antifraude', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ table: selectedTable, document }),
+        body: JSON.stringify({ table: selectedTable, document: documentNumber }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -102,7 +100,7 @@ function Antifraude() {
   };
 
   const handleNewSearch = () => {
-    setDocument('');
+    setDocumentNumber('');
     setResult(null);
     setError('');
     setSearchTerm('');
@@ -146,64 +144,106 @@ function Antifraude() {
   };
 
   const exportToCSV = () => {
-    if (!result || result.length === 0) return;
-    
-    // Usar dados filtrados ao invés de todos os dados
-    const dataToExport = filteredData.length > 0 ? filteredData : result;
-    
-    // Filtrar colunas como na tabela
-    const visibleColumns = Object.keys(result[0]).filter(col => ![
-      'execution_stats', 'source_table', 'healthy_transaction', 'chargeback', 'chargeback_receipt_date', 'chargeback_payment_date', 'versao_layout_edi',
-      'authenticated_by_3ds', 'card_expired', 'is_fallback', 'fallback_details', 'customer_phone_numbers', 'customer_address_complement',
-      'context_productscustomer_address_state', 'customer_address_street', 'customer_address_zip_code', 'customer_address_number',
-      'customer_address_neighborhood', 'zero_dollar_authorization',
-      'customer_ip_address', 'as_network', 'as_number', 'as_organization', 'city_name', 'latitude', 'longitude', 'accuracy_radius',
-      'country_name', 'recurrent', 'analyzed_by_betrusty', 'el_request_time', 'context_products', 'cycle_id',
-      'analysis_id', 'recurrence_external_id', 'test_ab', 'transaction_approved', 'domain_id', 'hierarchy', 'customer_email', 'risk_score', 'customer_contract_number', 'customer_address_city', 'customer_address_state', 'context_invoices', 'context_tags', 'payment_currency'
-    ].includes(col));
-    
-    // Mapeamento dos nomes das colunas para CSV
-    const columnNameMap = {
-      'light': 'PARENT ALIAS',
-      'light_web': 'ALIAS',
-    };
-    
-    const headers = visibleColumns.map(col => columnNameMap[col] || col.replace(/_/g, ' ').toUpperCase()).join(',');
-    
-    const rows = dataToExport.map(row => 
-      visibleColumns.map(col => {
-        const value = row[col];
-        // Escapar valores que contêm vírgulas, quebras de linha ou aspas
-        if (typeof value === 'string' && (value.includes(',') || value.includes('\n') || value.includes('"'))) {
-          return `"${value.replace(/"/g, '""')}"`;
-        }
-        return value || '';
-      }).join(',')
-    );
-    
-    const csvContent = [headers, ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    const filterSuffix = searchTerm ? `_filtrado_${searchTerm}` : '';
-    link.setAttribute('href', url);
-    link.setAttribute('download', `consulta_prevencao_${selectedTable}${filterSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    // Feedback para o usuário
-    const exportButton = document.querySelector('.btn-export');
-    const originalText = exportButton.innerHTML;
-    exportButton.innerHTML = '<span class="btn-icon">✅</span> CSV Exportado!';
-    exportButton.style.background = '#4caf50';
-    setTimeout(() => {
-      exportButton.innerHTML = originalText;
-      exportButton.style.background = '';
-    }, 2000);
+    try {
+      console.log('🎯 Iniciando exportação CSV...');
+      
+      if (!result || result.length === 0) {
+        alert('❌ Nenhum resultado disponível para exportar!');
+        return;
+      }
+      
+      // Usar dados filtrados (sortedData já inclui filtros e ordenação)
+      const dataToExport = filteredData && filteredData.length > 0 ? filteredData : result;
+      console.log(`📊 Exportando ${dataToExport.length} registros`);
+      
+      if (dataToExport.length === 0) {
+        alert('❌ Nenhum dado disponível após aplicar filtros!');
+        return;
+      }
+      
+      // Pegar as primeiras 10 colunas principais (simplificado)
+      const allColumns = Object.keys(dataToExport[0]);
+      const mainColumns = allColumns.filter(col => 
+        !col.includes('stats') && 
+        !col.includes('address') && 
+        !col.includes('phone') && 
+        !col.includes('network') &&
+        !col.includes('organization') &&
+        !col.includes('latitude') &&
+        !col.includes('longitude') &&
+        !col.includes('radius') &&
+        !col.includes('context') &&
+        !col.includes('analysis_id') &&
+        !col.includes('hierarchy') &&
+        !col.includes('risk_score') &&
+        !col.includes('domain_id') &&
+        !col.includes('test_ab')
+      ).slice(0, 15); // Limite de 15 colunas principais
+      
+      console.log(`📝 Exportando ${mainColumns.length} colunas:`, mainColumns);
+      
+      // Headers simples
+      const headers = mainColumns.map(col => col.replace(/_/g, ' ').toUpperCase()).join(',');
+      
+      // Dados simples
+      const rows = dataToExport.map(row => 
+        mainColumns.map(col => {
+          let value = row[col];
+          if (value === null || value === undefined) return '';
+          
+          // Converter para string e limpar
+          value = String(value).replace(/[\r\n]/g, ' ').trim();
+          
+          // Se contém vírgula ou aspas, envolver em aspas duplas
+          if (value.includes(',') || value.includes('"')) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          
+          return value;
+        }).join(',')
+      );
+      
+      console.log(`🔢 ${rows.length} linhas processadas`);
+      
+      // Gerar CSV
+      const csvContent = [headers, ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // Download
+      const link = window.document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      const timestamp = new Date().toISOString().split('T')[0];
+      const fileName = `antifraude_${selectedTable}_${timestamp}.csv`;
+      
+      link.href = url;
+      link.download = fileName;
+      link.style.display = 'none';
+      
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      
+      // Cleanup
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+      
+      // Feedback visual
+      const btn = window.document.querySelector('.btn-export');
+      if (btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Exportado!';
+        btn.style.background = '#4caf50';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = '';
+        }, 2000);
+      }
+      
+      console.log('✅ CSV exportado com sucesso!');
+      
+    } catch (error) {
+      console.error('❌ Erro na exportação:', error);
+      alert(`Erro ao exportar: ${error.message}`);
+    }
   };
 
   // Filtrar e paginar dados
@@ -268,8 +308,8 @@ function Antifraude() {
             <input
               type="text"
               id="document"
-              value={document}
-              onChange={e => setDocument(e.target.value)}
+              value={documentNumber}
+              onChange={e => setDocumentNumber(e.target.value)}
               placeholder="Digite o CPF/CNPJ"
               className="prevention-input"
               required
@@ -278,7 +318,7 @@ function Antifraude() {
         </div>
         
         <div className="form-actions">
-          <button type="submit" className="btn-primary" disabled={loading || !document}>
+          <button type="submit" className="btn-primary" disabled={loading || !documentNumber}>
             {loading ? (
               <>
                 <span className="spinner"></span>
@@ -505,7 +545,7 @@ function Antifraude() {
         <div className="empty-state">
           <span className="empty-icon">🔍</span>
           <h3>Nenhum resultado encontrado</h3>
-          <p>Não foram encontrados registros para o documento <strong>{document}</strong> na tabela selecionada.</p>
+          <p>Não foram encontrados registros para o documento <strong>{documentNumber}</strong> na tabela selecionada.</p>
           <button onClick={handleNewSearch} className="btn-secondary">
             <span className="btn-icon">🔄</span>
             Tentar Nova Consulta
@@ -554,12 +594,10 @@ function BolepixAE() {
     setError('');
     setResult(null);
     try {
-      const token = localStorage.getItem('authToken');
-              const res = await fetch('/api/bolepix', {
+      const res = await fetch('/api/bolepix', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(form),
       });
@@ -579,12 +617,7 @@ function BolepixAE() {
   const handleCorrelationAutoFetch = async (correlationId, updatedForm) => {
     try {
       console.log('🔍 Buscando dados para correlation_id:', correlationId);
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(`/api/correlation/${correlationId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const res = await fetch(`/api/correlation/${correlationId}`);
       if (res.ok) {
         const data = await res.json();
         console.log('✅ Dados encontrados:', data);
@@ -1721,12 +1754,10 @@ function Pagamentos({ submenu }) {
     
     try {
       const endpoint = submenu === 'gma' ? '/api/pagamentos/gma' : '/api/pagamentos/posnegado';
-      const token = localStorage.getItem('authToken');
-              const response = await fetch(`${endpoint}`, {
+      const response = await fetch(`${endpoint}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(filters)
       });

@@ -383,29 +383,23 @@ app.post('/api/pagamentos/gma', async (req, res) => {
 
     let query = `
       SELECT 
-        t.correlation_id AS correlation_id_GMA,
-        t.transaction_id AS transaction_id_GMA,
-        t.workspace_id AS workspace_id_GMA,
-        t.pos AS pos_GMA,
-        t."type",
-        t.amount AS Valor_GMA,
-        t.installments AS installments_GMA,
-        t.status AS status_GMA,
-        t.authorization_code AS authorization_code_GMA,
-        t.nsu AS nsu_GMA,
-        t.tokenized AS tokenized_GMA,
-        t.tid AS tid_GMA,
-        t.dt AS data_transacao_GMA,
-        t.card_token AS card_token_GMA,
-        t.card_exp_date AS card_exp_date_GMA,
-        c.card_created_at,
-        c.card_brand_label,
-        c.card_bin,
-        c.card_last 
+        correlation_id AS correlation_id_GMA,
+        transaction_id AS transaction_id_GMA,
+        workspace_id AS workspace_id_GMA,
+        pos AS pos_GMA,
+        "type",
+        amount AS Valor_GMA,
+        installments AS installments_GMA,
+        status AS status_GMA,
+        authorization_code AS authorization_code_GMA,
+        nsu AS nsu_GMA,
+        tokenized AS tokenized_GMA,
+        tid AS tid_GMA,
+        dt AS data_transacao_GMA,
+        card_token AS card_token_GMA,
+        card_exp_date AS card_exp_date_GMA
       FROM 
-        refined_payments.gma_transactions t
-      INNER JOIN 
-        refined_payments.eldorado_card c ON t.card_token = c.card_extuid 
+        refined_payments.gma_transactions
       WHERE 1=1
     `;
 
@@ -414,73 +408,55 @@ app.post('/api/pagamentos/gma', async (req, res) => {
 
     // Adicionar filtros dinamicamente
     if (dtStart && dtEnd) {
-      // Converter para TIMESTAMP para incluir o dia inteiro
-      query += ` AND t.dt >= $${paramIndex}::timestamp AND t.dt < $${paramIndex + 1}::timestamp + INTERVAL '1 day'`;
+      // Usar filtros de data simples
+      query += ` AND dt >= $${paramIndex}::date AND dt < $${paramIndex + 1}::date + INTERVAL '1 day'`;
       params.push(dtStart, dtEnd);
       paramIndex += 2;
     }
 
     if (amount) {
-      query += ` AND t.amount = $${paramIndex}`;
+      query += ` AND amount = $${paramIndex}`;
       params.push(amount);
       paramIndex++;
     }
 
-    if (card_bin) {
-      query += ` AND c.card_bin = $${paramIndex}`;
-      params.push(card_bin);
-      paramIndex++;
-    }
-
-    if (card_last) {
-      query += ` AND c.card_last = $${paramIndex}`;
-      params.push(card_last);
-      paramIndex++;
-    }
-
     if (card_token) {
-      query += ` AND t.card_token = $${paramIndex}`;
+      query += ` AND card_token = $${paramIndex}`;
       params.push(card_token);
       paramIndex++;
     }
 
     if (transaction_id) {
-      query += ` AND t.transaction_id = $${paramIndex}`;
+      query += ` AND transaction_id = $${paramIndex}`;
       params.push(transaction_id);
       paramIndex++;
     }
 
     if (correlation_id) {
-      query += ` AND t.correlation_id = $${paramIndex}`;
+      query += ` AND correlation_id = $${paramIndex}`;
       params.push(correlation_id);
       paramIndex++;
     }
 
-    if (application_name) {
-      query += ` AND t.application_name = $${paramIndex}`;
-      params.push(application_name);
-      paramIndex++;
-    }
-
     if (card_exp_date) {
-      query += ` AND t.card_exp_date = $${paramIndex}`;
+      query += ` AND card_exp_date = $${paramIndex}`;
       params.push(card_exp_date);
       paramIndex++;
     }
 
     if (nsu) {
-      query += ` AND t.nsu = $${paramIndex}`;
+      query += ` AND nsu = $${paramIndex}`;
       params.push(nsu);
       paramIndex++;
     }
 
     if (authorization_code) {
-      query += ` AND t.authorization_code = $${paramIndex}`;
+      query += ` AND authorization_code = $${paramIndex}`;
       params.push(authorization_code);
       paramIndex++;
     }
 
-    query += ' ORDER BY t.dt DESC LIMIT 10';
+    query += ' ORDER BY dt DESC LIMIT 10';
 
     console.log('Query final:', query);
     console.log('Parâmetros:', params);
@@ -489,94 +465,50 @@ app.post('/api/pagamentos/gma', async (req, res) => {
     
     console.log(`Registros encontrados: ${result.rows.length}`);
     
-    // Se não encontrou resultados, fazer uma consulta alternativa sem JOIN
-    if (result.rows.length === 0) {
-      console.log('Nenhum resultado com JOIN. Tentando consulta alternativa...');
+    // Se não encontrou nenhum resultado mas há filtros aplicados, tentar uma busca mais ampla
+    if (result.rows.length === 0 && params.length > 0) {
+      console.log('⚠️ Nenhum resultado encontrado. Tentando busca mais ampla...');
       
-      let alternativeQuery = `
-        SELECT 
-          t.correlation_id AS correlation_id_GMA,
-          t.transaction_id AS transaction_id_GMA,
-          t.workspace_id AS workspace_id_GMA,
-          t.pos AS pos_GMA,
-          t."type",
-          t.amount AS Valor_GMA,
-          t.installments AS installments_GMA,
-          t.status AS status_GMA,
-          t.authorization_code AS authorization_code_GMA,
-          t.nsu AS nsu_GMA,
-          t.tokenized AS tokenized_GMA,
-          t.tid AS tid_GMA,
-          t.dt AS data_transacao_GMA,
-          t.card_token AS card_token_GMA,
-          t.card_exp_date AS card_exp_date_GMA,
-          NULL AS card_created_at,
-          NULL AS card_brand_label,
-          NULL AS card_bin,
-          NULL AS card_last 
-        FROM 
-          refined_payments.gma_transactions t
-        WHERE 1=1
+      // Buscar registros similares baseados apenas em valor se fornecido
+      if (total_amount) {
+        const similarQuery = `
+          SELECT * FROM refined_ayla_smart.smart_bill_payment_pos_transactions 
+          WHERE total_amount BETWEEN $1 - 1000 AND $1 + 1000
+          ORDER BY ABS(total_amount - $1) ASC
+          LIMIT 10
+        `;
+        
+        const similarResult = await pool.query(similarQuery, [parseFloat(total_amount)]);
+        console.log(`Registros similares por valor: ${similarResult.rows.length}`);
+        
+        if (similarResult.rows.length > 0) {
+          return res.json({
+            original_results: result.rows,
+            similar_results: similarResult.rows,
+            message: `Nenhum resultado exato encontrado. Mostrando ${similarResult.rows.length} registros com valores similares a ${total_amount}.`
+          });
+        }
+      }
+      
+      // Se ainda não encontrou, mostrar alguns registros recentes com dados válidos
+      const fallbackQuery = `
+        SELECT * FROM refined_ayla_smart.smart_bill_payment_pos_transactions 
+        WHERE total_amount IS NOT NULL AND total_amount > 0
+        ORDER BY RANDOM()
+        LIMIT 5
       `;
-
-      const altParams = [];
-      let altParamIndex = 1;
-
-      // Adicionar filtros básicos
-      if (dtStart && dtEnd) {
-        alternativeQuery += ` AND t.dt >= $${altParamIndex}::timestamp AND t.dt < $${altParamIndex + 1}::timestamp + INTERVAL '1 day'`;
-        altParams.push(dtStart, dtEnd);
-        altParamIndex += 2;
-      }
-
-      if (amount) {
-        alternativeQuery += ` AND t.amount = $${altParamIndex}`;
-        altParams.push(amount);
-        altParamIndex++;
-      }
-
-      if (card_token) {
-        alternativeQuery += ` AND t.card_token = $${altParamIndex}`;
-        altParams.push(card_token);
-        altParamIndex++;
-      }
-
-      if (transaction_id) {
-        alternativeQuery += ` AND t.transaction_id = $${altParamIndex}`;
-        altParams.push(transaction_id);
-        altParamIndex++;
-      }
-
-      if (correlation_id) {
-        alternativeQuery += ` AND t.correlation_id = $${altParamIndex}`;
-        altParams.push(correlation_id);
-        altParamIndex++;
-      }
-
-      if (nsu) {
-        alternativeQuery += ` AND t.nsu = $${altParamIndex}`;
-        altParams.push(nsu);
-        altParamIndex++;
-      }
-
-      if (authorization_code) {
-        alternativeQuery += ` AND t.authorization_code = $${altParamIndex}`;
-        altParams.push(authorization_code);
-        altParamIndex++;
-      }
-
-      alternativeQuery += ' ORDER BY t.dt DESC LIMIT 10';
-
-      console.log('Query alternativa:', alternativeQuery);
-      console.log('Parâmetros alternativos:', altParams);
-
-      const altResult = await pool.query(alternativeQuery, altParams);
-      console.log(`Registros encontrados (alternativa): ${altResult.rows.length}`);
       
-      res.json(altResult.rows);
-    } else {
-      res.json(result.rows);
+      const fallbackResult = await pool.query(fallbackQuery);
+      console.log(`Registros de exemplo: ${fallbackResult.rows.length}`);
+      
+      return res.json({
+        original_results: result.rows,
+        example_results: fallbackResult.rows,
+        message: `Nenhum resultado encontrado com os filtros aplicados. Mostrando ${fallbackResult.rows.length} registros de exemplo.`
+      });
     }
+    
+    res.json(result.rows);
   } catch (err) {
     console.error('Erro na consulta GMA:', err);
     res.status(500).json({ error: 'Erro ao consultar o banco', details: err.message });
@@ -588,44 +520,137 @@ app.get('/api/pagamentos/gma/test', async (req, res) => {
   try {
     console.log('\n=== TESTE DE DADOS GMA ===');
     
-    // Verificar se há dados na tabela gma_transactions
-    const gmaResult = await pool.query('SELECT COUNT(*) as total FROM refined_payments.gma_transactions');
-    console.log('Total de registros em gma_transactions:', gmaResult.rows[0].total);
-    
-    // Verificar se há dados na tabela eldorado_card
-    const cardResult = await pool.query('SELECT COUNT(*) as total FROM refined_payments.eldorado_card');
-    console.log('Total de registros em eldorado_card:', cardResult.rows[0].total);
-    
-    // Verificar algumas datas disponíveis
-    const datesResult = await pool.query(`
-      SELECT MIN(dt) as min_date, MAX(dt) as max_date 
-      FROM refined_payments.gma_transactions 
-      WHERE dt IS NOT NULL
-    `);
-    console.log('Datas disponíveis:', datesResult.rows[0]);
-    
-    // Fazer uma consulta simples sem filtros
-    const simpleResult = await pool.query(`
+    // Teste simples - só verificar se as tabelas existem
+    const testQuery = await pool.query(`
       SELECT 
-        t.correlation_id,
-        t.transaction_id,
-        t.amount,
-        t.dt,
-        t.card_brand
-      FROM refined_payments.gma_transactions t
-      LIMIT 5
+        (SELECT COUNT(*) FROM refined_payments.gma_transactions LIMIT 1) as gma_count,
+        (SELECT COUNT(*) FROM refined_payments.eldorado_card LIMIT 1) as card_count
     `);
-    console.log('Exemplo de dados (sem JOIN):', simpleResult.rows);
+    
+    console.log('Teste concluído:', testQuery.rows[0]);
     
     res.json({
-      gma_transactions_count: gmaResult.rows[0].total,
-      eldorado_card_count: cardResult.rows[0].total,
-      date_range: datesResult.rows[0],
-      sample_data: simpleResult.rows
+      status: 'OK',
+      message: 'Tabelas GMA acessíveis',
+      gma_transactions_exists: testQuery.rows[0].gma_count > 0,
+      eldorado_card_exists: testQuery.rows[0].card_count > 0
     });
   } catch (err) {
     console.error('Erro no teste:', err);
     res.status(500).json({ error: 'Erro ao testar', details: err.message });
+  }
+});
+
+// Rota para listar colunas da tabela GMA (debug)
+app.get('/api/pagamentos/gma/columns', async (req, res) => {
+  try {
+    console.log('\n=== LISTANDO ESQUEMAS DISPONÍVEIS ===');
+    
+    const schemasResult = await pool.query(`
+      SELECT schema_name 
+      FROM information_schema.schemata 
+      WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+      ORDER BY schema_name
+    `);
+    
+    console.log('Esquemas encontrados:', schemasResult.rows.length);
+    
+    // Tentar acessar diretamente a tabela com SELECT
+    let directQueryResult = null;
+    try {
+      console.log('Testando acesso direto à tabela...');
+      directQueryResult = await pool.query(`
+        SELECT COUNT(*) as total
+        FROM refined_payments.gma_transactions
+        LIMIT 1
+      `);
+      console.log('Acesso direto funcionou:', directQueryResult.rows[0]);
+    } catch (directErr) {
+      console.log('Erro no acesso direto:', directErr.message);
+    }
+    
+    res.json({
+      available_schemas: schemasResult.rows,
+      direct_access_test: directQueryResult ? directQueryResult.rows[0] : null,
+      message: 'Lista de esquemas disponíveis'
+    });
+  } catch (err) {
+    console.error('Erro ao listar esquemas:', err);
+    res.status(500).json({ error: 'Erro ao listar esquemas', details: err.message });
+  }
+});
+
+// Rota de teste para verificar dados POS Negado
+app.get('/api/pagamentos/posnegado/test', async (req, res) => {
+  try {
+    console.log('\n=== TESTE DADOS POS NEGADO ===');
+    
+    // Verificar se a tabela existe e tem dados
+    const countQuery = await pool.query(`
+      SELECT COUNT(*) as total 
+      FROM refined_ayla_smart.smart_bill_payment_pos_transactions 
+      LIMIT 1
+    `);
+    
+    console.log('Total de registros:', countQuery.rows[0].total);
+    
+    // Buscar alguns registros de exemplo
+    const sampleQuery = await pool.query(`
+      SELECT 
+        transaction_date,
+        total_amount,
+        transaction_bin,
+        transaction_pan,
+        transaction_nsu,
+        transaction_authorization_number
+      FROM refined_ayla_smart.smart_bill_payment_pos_transactions 
+      WHERE transaction_date IS NOT NULL
+      ORDER BY transaction_date DESC 
+      LIMIT 5
+    `);
+    
+    // Buscar registros com campos preenchidos
+    const filledQuery = await pool.query(`
+      SELECT 
+        transaction_date,
+        total_amount,
+        transaction_bin,
+        transaction_pan,
+        transaction_nsu,
+        transaction_authorization_number
+      FROM refined_ayla_smart.smart_bill_payment_pos_transactions 
+      WHERE (transaction_bin IS NOT NULL AND transaction_bin != '')
+         OR (transaction_pan IS NOT NULL AND transaction_pan != '')
+         OR (transaction_nsu IS NOT NULL AND transaction_nsu != '')
+         OR (transaction_authorization_number IS NOT NULL AND transaction_authorization_number != '')
+      LIMIT 5
+    `);
+    
+    console.log('Registros de exemplo:', sampleQuery.rows);
+    console.log('Registros com dados preenchidos:', filledQuery.rows);
+    
+    // Verificar tipos de dados das colunas
+    const columnsQuery = await pool.query(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns
+      WHERE table_schema = 'refined_ayla_smart'
+      AND table_name = 'smart_bill_payment_pos_transactions'
+      AND column_name IN ('total_amount', 'transaction_bin', 'transaction_pan', 'transaction_nsu', 'transaction_authorization_number', 'transaction_date')
+      ORDER BY column_name
+    `);
+    
+    console.log('Estrutura das colunas:', columnsQuery.rows);
+    
+    res.json({
+      total_records: countQuery.rows[0].total,
+      sample_data: sampleQuery.rows,
+      filled_data: filledQuery.rows,
+      column_types: columnsQuery.rows,
+      status: 'OK'
+    });
+  } catch (err) {
+    console.error('Erro no teste POS Negado:', err);
+    res.status(500).json({ error: 'Erro ao testar POS Negado', details: err.message });
   }
 });
 
@@ -652,41 +677,54 @@ app.post('/api/pagamentos/posnegado', async (req, res) => {
     const params = [];
     let paramIndex = 1;
 
-    // Adicionar filtros dinamicamente
+    // Adicionar filtros dinamicamente com logs detalhados
     if (dtStart && dtEnd) {
-      query += ` AND transaction_date >= $${paramIndex} AND transaction_date < $${paramIndex + 1}`;
+      console.log(`Filtro DATA: ${dtStart} até ${dtEnd}`);
+      query += ` AND transaction_date >= $${paramIndex}::date AND transaction_date <= $${paramIndex + 1}::date`;
       params.push(dtStart, dtEnd);
       paramIndex += 2;
     }
 
     if (total_amount) {
-      query += ` AND total_amount = $${paramIndex}`;
-      params.push(total_amount);
-      paramIndex++;
+      console.log(`Filtro VALOR: ${total_amount} (tipo: ${typeof total_amount})`);
+      // Tentar converter para número se for string
+      const amount = parseFloat(total_amount);
+      if (!isNaN(amount)) {
+        query += ` AND total_amount = $${paramIndex}`;
+        params.push(amount);
+        paramIndex++;
+      } else {
+        console.log(`⚠️ Valor inválido ignorado: ${total_amount}`);
+      }
     }
 
     if (transaction_bin) {
-      query += ` AND transaction_bin = $${paramIndex}`;
-      params.push(transaction_bin);
-      paramIndex++;
+      console.log(`Filtro BIN: ${transaction_bin}`);
+      query += ` AND (transaction_bin = $${paramIndex} OR transaction_bin LIKE $${paramIndex + 1})`;
+      params.push(transaction_bin.toString(), `%${transaction_bin}%`);
+      paramIndex += 2;
     }
 
     if (transaction_pan) {
-      query += ` AND transaction_pan = $${paramIndex}`;
-      params.push(transaction_pan);
-      paramIndex++;
+      console.log(`Filtro PAN: ${transaction_pan}`);
+      query += ` AND (transaction_pan = $${paramIndex} OR transaction_pan LIKE $${paramIndex + 1})`;
+      params.push(transaction_pan.toString(), `%${transaction_pan}%`);
+      paramIndex += 2;
     }
 
     if (transaction_nsu) {
-      query += ` AND transaction_nsu = $${paramIndex}`;
-      params.push(transaction_nsu);
-      paramIndex++;
+      console.log(`Filtro NSU: ${transaction_nsu} (tipo: ${typeof transaction_nsu})`);
+      // Tentar tanto como número quanto como string
+      query += ` AND (transaction_nsu::text = $${paramIndex} OR transaction_nsu::text LIKE $${paramIndex + 1})`;
+      params.push(transaction_nsu.toString(), `%${transaction_nsu}%`);
+      paramIndex += 2;
     }
 
     if (transaction_authorization_number) {
-      query += ` AND transaction_authorization_number = $${paramIndex}`;
-      params.push(transaction_authorization_number);
-      paramIndex++;
+      console.log(`Filtro AUTH: ${transaction_authorization_number}`);
+      query += ` AND (transaction_authorization_number = $${paramIndex} OR transaction_authorization_number LIKE $${paramIndex + 1})`;
+      params.push(transaction_authorization_number.toString(), `%${transaction_authorization_number}%`);
+      paramIndex += 2;
     }
 
     query += ' ORDER BY transaction_date DESC LIMIT 10';

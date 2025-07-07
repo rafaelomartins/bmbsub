@@ -30,9 +30,49 @@ const formatCurrency = (value) => {
 
 function Home() {
   return (
-    <div className="home-container">
-      <h2>Bem-vindo ao Portal de Consultas Subadquirência Bemobi</h2>
-      <p>Selecione uma opção no menu para começar.</p>
+    <div className="bolepix-card">
+      <div className="page-header">
+        <h1>🏠 Portal de Consultas Subadquirência Bemobi</h1>
+        <p className="subtitle">Central de ferramentas para consultas e gestão de transações</p>
+      </div>
+      
+      <div className="features-grid">
+        <div className="feature-card">
+          <div className="feature-icon">🛡️</div>
+          <h3>Consultas de Prevenção</h3>
+          <p>Sistema integrado de consultas às bases de dados de prevenção e antifraude para validação de transações</p>
+        </div>
+        
+        <div className="feature-card">
+          <div className="feature-icon">💳</div>
+          <h3>Consulta BolePIX AE</h3>
+          <p>Ferramenta para consultas de boletos e PIX no sistema de antecipação de recebíveis</p>
+        </div>
+        
+        <div className="feature-card">
+          <div className="feature-icon">🏦</div>
+          <h3>Ferramentas Cielo</h3>
+          <p>Gestão completa de tokens, solicitações de cancelamento e cartas de cancelamento Cielo</p>
+        </div>
+        
+        <div className="feature-card">
+          <div className="feature-icon">💸</div>
+          <h3>Consultas de Pagamentos</h3>
+          <p>Análise detalhada de transações Web, PIX e pagamentos POS com filtros avançados</p>
+        </div>
+        
+        <div className="feature-card">
+          <div className="feature-icon">👥</div>
+          <h3>Gerenciamento de Usuários</h3>
+          <p>Administração de contas, permissões e controle de acesso ao sistema</p>
+        </div>
+        
+        <div className="feature-card">
+          <div className="feature-icon">📊</div>
+          <h3>Relatórios e Analytics</h3>
+          <p>Exportação de dados e análises estatísticas das consultas realizadas</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -274,23 +314,22 @@ function Antifraude() {
 
   return (
     <div className="bolepix-card">
-      <div className="prevention-header">
+      <div className="page-header">
         <h1>🛡️ Consultas de Prevenção</h1>
-        <p>Sistema integrado de consultas às bases de dados de prevenção e antifraude</p>
+        <p className="subtitle">Sistema integrado de consultas às bases de dados de prevenção e antifraude</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="prevention-form">
-        <div className="form-row">
-          <div className="form-group">
+      <form onSubmit={handleSubmit} className="modern-form">
+        <div className="form-grid">
+          <div className="form-field">
             <label htmlFor="selectedTable">
-              <span className="label-icon">🗂️</span>
-              Tabela para Consulta
+              🗂️ Tabela para Consulta
             </label>
             <select
               id="selectedTable"
               value={selectedTable}
               onChange={e => setSelectedTable(e.target.value)}
-              className="bolepix-select"
+              required
             >
               {tableOptions.map(option => (
                 <option key={option.value} value={option.value}>
@@ -300,10 +339,9 @@ function Antifraude() {
             </select>
           </div>
 
-          <div className="form-group">
+          <div className="form-field">
             <label htmlFor="document">
-              <span className="label-icon">📄</span>
-              Documento do Cliente
+              📄 Documento do Cliente
             </label>
             <input
               type="text"
@@ -311,14 +349,13 @@ function Antifraude() {
               value={documentNumber}
               onChange={e => setDocumentNumber(e.target.value)}
               placeholder="Digite o CPF/CNPJ"
-              className="prevention-input"
               required
             />
           </div>
         </div>
         
-        <div className="form-actions">
-          <button type="submit" className="btn-primary" disabled={loading || !documentNumber}>
+        <div className="btn-container">
+          <button type="submit" className="modern-btn" disabled={loading || !documentNumber}>
             {loading ? (
               <>
                 <span className="spinner"></span>
@@ -326,16 +363,14 @@ function Antifraude() {
               </>
             ) : (
               <>
-                <span className="btn-icon">🔍</span>
-                Consultar
+                🔍 Consultar
               </>
             )}
           </button>
           
           {result && (
-            <button type="button" className="btn-secondary" onClick={handleNewSearch}>
-              <span className="btn-icon">🔄</span>
-              Nova Consulta
+            <button type="button" className="modern-btn secondary" onClick={handleNewSearch}>
+              🔄 Nova Consulta
             </button>
           )}
         </div>
@@ -655,89 +690,197 @@ function BolepixAE() {
 
   return (
     <div className="bolepix-card">
-      <h1>Consulta BolePix Subadquirência</h1>
-      <form onSubmit={handleSubmit} className="bolepix-form">
-        <label htmlFor="correlation_id">Correlation ID</label>
-        <input
-          type="text"
-          name="correlation_id"
-          id="correlation_id"
-          placeholder="Correlation ID"
-          value={form.correlation_id}
-          onChange={handleChange}
-          required
-        />
-        <label htmlFor="application_id">Application ID</label>
-        <input
-          type="text"
-          name="application_id"
-          id="application_id"
-          placeholder="Application ID"
-          value={form.application_id}
-          onChange={handleChange}
-          readOnly
-        />
-        <label htmlFor="workspace_id">Workspace ID</label>
-        <input
-          type="text"
-          name="workspace_id"
-          id="workspace_id"
-          placeholder="Workspace ID"
-          value={form.workspace_id}
-          onChange={handleChange}
-          readOnly
-        />
-        <label htmlFor="company_id">Company ID</label>
-        <input
-          type="text"
-          name="company_id"
-          id="company_id"
-          placeholder="Company ID"
-          value={form.company_id}
-          onChange={handleChange}
-          readOnly
-        />
+      <div className="page-header">
+        <h1>💳 Consulta BolePIX AE</h1>
+        <p className="subtitle">Sistema de consulta de boletos e PIX para antecipação de recebíveis</p>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="modern-form">
+        <div className="form-grid">
+          <div className="form-field">
+            <label htmlFor="correlation_id">
+              🔗 Correlation ID
+            </label>
+            <input
+              type="text"
+              name="correlation_id"
+              id="correlation_id"
+              placeholder="Digite o Correlation ID"
+              value={form.correlation_id}
+              onChange={handleChange}
+              maxLength={36}
+              required
+            />
+          </div>
+          
+          <div className="form-field">
+            <label htmlFor="application_id">
+              📱 Application ID
+            </label>
+            <input
+              type="text"
+              name="application_id"
+              id="application_id"
+              placeholder="Application ID"
+              value={form.application_id}
+              onChange={handleChange}
+              readOnly
+            />
+          </div>
+          
+          <div className="form-field">
+            <label htmlFor="workspace_id">
+              🏢 Workspace ID
+            </label>
+            <input
+              type="text"
+              name="workspace_id"
+              id="workspace_id"
+              placeholder="Workspace ID"
+              value={form.workspace_id}
+              onChange={handleChange}
+              readOnly
+            />
+          </div>
+          
+          <div className="form-field">
+            <label htmlFor="company_id">
+              🏪 Company ID
+            </label>
+            <input
+              type="text"
+              name="company_id"
+              id="company_id"
+              placeholder="Company ID"
+              value={form.company_id}
+              onChange={handleChange}
+              readOnly
+            />
+          </div>
+        </div>
+
         {!isCorrelationComplete && !isFieldsFilled && (
-          <span className="bolepix-info">Digite o correlation</span>
+          <div className="modern-alert info">
+            <span className="alert-icon">ℹ️</span>
+            <div className="alert-content">
+              <div className="alert-title">Aguardando dados</div>
+              <div>Digite o Correlation ID para buscar os dados automaticamente</div>
+            </div>
+          </div>
         )}
+        
         {isCorrelationComplete && !isFieldsFilled && (
-          <span className="bolepix-info">Aguarde enquanto consultamos no banco</span>
+          <div className="modern-alert warning">
+            <span className="alert-icon">⏳</span>
+            <div className="alert-content">
+              <div className="alert-title">Consultando</div>
+              <div>Aguarde enquanto consultamos os dados no banco</div>
+            </div>
+          </div>
         )}
-        {isFieldsFilled && (
-          <button type="submit" disabled={loading} className="bolepix-btn">
-            Consultar
-          </button>
-        )}
+        
+        <div className="btn-container">
+          {isFieldsFilled && (
+            <button type="submit" disabled={loading} className="modern-btn">
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  Consultando...
+                </>
+              ) : (
+                <>
+                  🔍 Consultar BolePIX
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </form>
-      {error && <div className="error">{error}</div>}
+      
+      {error && (
+        <div className="modern-alert error">
+          <span className="alert-icon">❌</span>
+          <div className="alert-content">
+            <div className="alert-title">Erro na consulta</div>
+            <div>{error}</div>
+          </div>
+        </div>
+      )}
+      
       {result && (
         <>
-          <div className="result">
-            <h2>Resultado</h2>
-            <p><b>Descrição:</b> {result.description}</p>
-            <p><b>Valor:</b> {formatCurrency(result.value)}</p>
-            <p><b>Status:</b> {result.status}</p>
-            <p><b>Data de Emissão:</b> {result.issueDate}</p>
-            <p><b>Data de Vencimento:</b> {result.dueDate}</p>
-            <p><b>Nosso Número:</b> {result.ourNumber}</p>
-            <p><b>Número do Documento:</b> {result.documentNumber}</p>
-            <p><b>BarCode:</b> {result.barCodeFormatted}</p>
+          <div className="result-card">
+            <h2>📋 Resultado da Consulta</h2>
+            
+            <div className="result-item">
+              <span className="result-label">Descrição:</span>
+              <span className="result-value">{result.description}</span>
+            </div>
+            
+            <div className="result-item">
+              <span className="result-label">Valor:</span>
+              <span className="result-value" style={{color: '#28a745', fontWeight: 'bold'}}>{formatCurrency(result.value)}</span>
+            </div>
+            
+            <div className="result-item">
+              <span className="result-label">Status:</span>
+              <span className="result-value">{result.status}</span>
+            </div>
+            
+            <div className="result-item">
+              <span className="result-label">Data de Emissão:</span>
+              <span className="result-value">{result.issueDate}</span>
+            </div>
+            
+            <div className="result-item">
+              <span className="result-label">Data de Vencimento:</span>
+              <span className="result-value">{result.dueDate}</span>
+            </div>
+            
+            <div className="result-item">
+              <span className="result-label">Nosso Número:</span>
+              <span className="result-value">{result.ourNumber}</span>
+            </div>
+            
+            <div className="result-item">
+              <span className="result-label">Número do Documento:</span>
+              <span className="result-value">{result.documentNumber}</span>
+            </div>
+            
+            <div className="result-item">
+              <span className="result-label">Código de Barras:</span>
+              <span className="result-value">{result.barCodeFormatted}</span>
+            </div>
+            
             {result.boletoUrl && (
-              <p><a href={result.boletoUrl} target="_blank" rel="noopener noreferrer">Ver Boleto</a></p>
+              <div className="result-item">
+                <span className="result-label">Boleto:</span>
+                <a href={result.boletoUrl} target="_blank" rel="noopener noreferrer" className="modern-btn success" style={{textDecoration: 'none', padding: '8px 16px', fontSize: '0.9rem'}}>
+                  📄 Ver Boleto
+                </a>
+              </div>
             )}
+            
             {result.qrcode && result.qrcode.qrCodeBase64 && (
-      <div>
-                <b>QR Code:</b>
-                <br />
-                <img className="qrcode" src={`data:image/png;base64,${result.qrcode.qrCodeBase64}`} alt="QR Code" style={{maxWidth: 200}} />
-                <br />
-                <small>{result.qrcode.copyAndPaste}</small>
+              <div style={{textAlign: 'center', marginTop: '24px', padding: '24px', background: '#f8f9fa', borderRadius: '12px'}}>
+                <h3 style={{margin: '0 0 16px 0', color: '#495057'}}>QR Code PIX</h3>
+                <img 
+                  src={`data:image/png;base64,${result.qrcode.qrCodeBase64}`} 
+                  alt="QR Code PIX" 
+                  style={{maxWidth: '200px', border: '2px solid #e9ecef', borderRadius: '8px'}} 
+                />
+                <div style={{marginTop: '16px', padding: '12px', background: 'white', borderRadius: '8px', fontFamily: 'monospace', fontSize: '0.85rem', wordBreak: 'break-all'}}>
+                  {result.qrcode.copyAndPaste}
+                </div>
               </div>
             )}
           </div>
-          <button type="button" className="new-search-btn" onClick={handleNewSearch} style={{marginTop: 20}}>
-            Fazer nova consulta
-          </button>
+          
+          <div className="btn-container" style={{marginTop: '24px'}}>
+            <button type="button" className="modern-btn secondary" onClick={handleNewSearch}>
+              🔄 Nova Consulta
+            </button>
+          </div>
         </>
       )}
     </div>
@@ -837,155 +980,147 @@ function CieloGerarToken() {
 
   return (
     <div className="bolepix-card">
-      <h1>Gerar Token - Cielo</h1>
+      <div className="page-header">
+        <h1>🔑 Gerar Token - Cielo</h1>
+        <p className="subtitle">Geração de token de acesso para integração com APIs da Cielo</p>
+      </div>
       
-      {/* Seção de Acesso OAuth */}
-      <div style={{ marginBottom: '30px', padding: '20px', background: '#e3f2fd', borderRadius: '8px', border: '1px solid #2196f3' }}>
-        <h3 style={{ margin: '0 0 15px 0', color: '#1976d2' }}>🔐 Obter CODE da Cielo</h3>
-        <div style={{ margin: '0 0 15px 0', color: '#424242', fontSize: '0.95rem' }}>
-          <p style={{ margin: '0 0 10px 0' }}>
+      <div className="modern-alert info" style={{ marginBottom: '32px' }}>
+        <span className="alert-icon">🔐</span>
+        <div className="alert-content">
+          <div className="alert-title">Como obter o CODE da Cielo</div>
+          <div>
             <strong>Passo a passo:</strong>
-          </p>
-          <ol style={{ margin: '0 0 10px 0', paddingLeft: '20px' }}>
-            <li>Clique em "🌐 Abrir Cielo OAuth"</li>
-            <li>Faça login na sua conta Cielo</li>
-            <li>Selecione a empresa desejada</li>
-            <li>Você será redirecionado para uma URL como: <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '3px' }}>https://www.cielo.com.br?code=ABC123...</code></li>
-            <li>Copie o valor do parâmetro <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '3px' }}>code=</code> da URL</li>
-            <li>Volte para esta página e clique em "📋 Colar CODE" ou cole manualmente no campo</li>
-          </ol>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <button 
-            onClick={() => window.open('https://minhaconta2.cielo.com.br/oauth/?mode=redirect&client_id=69d136cb-f7ca-4f4e-850c-e5975d41dba6&redirect_uri=https:%2F%2Fwww.cielo.com.br&state=123456&scope=transaction_read,transaction_write', '_blank')}
-            style={{
-              marginTop: 18,
-              padding: '10px 24px',
-              background: '#1976d2',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 16,
-              cursor: 'pointer'
-            }}
-          >
-            🌐 Abrir Cielo OAuth
-          </button>
+            <ol style={{ margin: '8px 0 0 16px' }}>
+              <li>Clique em "🌐 Abrir Cielo OAuth"</li>
+              <li>Faça login na sua conta Cielo</li>
+              <li>Selecione a empresa desejada</li>
+              <li>Você será redirecionado para uma URL como: <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '3px' }}>https://www.cielo.com.br?code=ABC123...</code></li>
+              <li>Copie o valor do parâmetro <code style={{ background: '#f5f5f5', padding: '2px 4px', borderRadius: '3px' }}>code=</code> da URL</li>
+              <li>Volte para esta página e clique em "📋 Colar CODE" ou cole manualmente no campo</li>
+            </ol>
+          </div>
         </div>
       </div>
+      
+      <div className="btn-container" style={{ marginBottom: '32px' }}>
+        <button 
+          onClick={() => window.open('https://minhaconta2.cielo.com.br/oauth/?mode=redirect&client_id=69d136cb-f7ca-4f4e-850c-e5975d41dba6&redirect_uri=https:%2F%2Fwww.cielo.com.br&state=123456&scope=transaction_read,transaction_write', '_blank')}
+          className="modern-btn"
+        >
+          🌐 Abrir Cielo OAuth
+        </button>
+      </div>
 
-      <form onSubmit={handleSubmit} className="bolepix-form" style={{ marginBottom: 24 }}>
-        <label style={{ fontWeight: 600, marginBottom: 6, display: 'block', textAlign: 'center' }}>CODE</label>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
-          <input
-            type="text"
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            placeholder="Cole aqui o CODE"
-            required
-            maxLength={100}
-            style={{
-              width: 440,
-              maxWidth: '95vw',
-              padding: '10px 12px',
-              border: '2px solid #1976d2',
-              borderRadius: 6,
-              fontSize: 16,
-              letterSpacing: '0.04em',
-              fontFamily: 'monospace',
-              boxSizing: 'border-box',
-              background: '#fff',
-              color: '#333',
-              overflowX: 'auto',
-              textAlign: 'center'
-            }}
-            size={44}
-            autoComplete="off"
-          />
+      <form onSubmit={handleSubmit} className="modern-form">
+        <div className="form-field">
+          <label htmlFor="code">🔗 CODE da Cielo</label>
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            alignItems: 'stretch'
+          }}>
+            <input
+              type="text"
+              id="code"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              placeholder="Cole aqui o CODE obtido da Cielo"
+              required
+              maxLength={100}
+              style={{ 
+                flex: 1,
+                fontFamily: 'monospace',
+                fontSize: '0.9rem'
+              }}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              onClick={pasteCodeFromClipboard}
+              className="modern-btn success"
+            >
+              📋 Colar CODE
+            </button>
+          </div>
+        </div>
+        
+        <div className="btn-container">
           <button
-            type="button"
-            onClick={pasteCodeFromClipboard}
-            style={{
-              background: '#43a047',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              padding: '10px 16px',
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              minWidth: 110
-            }}
-            onMouseEnter={e => e.target.style.background = '#388e3c'}
-            onMouseLeave={e => e.target.style.background = '#43a047'}
+            type="submit"
+            className="modern-btn"
+            disabled={loading || !code}
           >
-            📋 Colar CODE
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                Gerando...
+              </>
+            ) : (
+              <>
+                🔑 Gerar Token
+              </>
+            )}
           </button>
         </div>
-        <button
-          type="submit"
-          style={{
-            width: '100%',
-            padding: '12px 0',
-            background: '#1976d2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontWeight: 700,
-            fontSize: 18,
-            cursor: 'pointer'
-          }}
-        >
-          Gerar Token
-        </button>
       </form>
-      {error && <div className="error">{error}</div>}
+      
+      {error && (
+        <div className="modern-alert error">
+          <span className="alert-icon">❌</span>
+          <div className="alert-content">
+            <div className="alert-title">Erro ao gerar token</div>
+            <div>{error}</div>
+          </div>
+        </div>
+      )}
+      
       {accessToken && (
-        <div style={{
-          background: '#f5f5f5',
-          border: '1px solid #bdbdbd',
-          borderRadius: 8,
-          padding: 16,
-          marginTop: 16
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <b style={{ color: '#1976d2', marginBottom: 4 }}>Access Token:</b>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', justifyContent: 'center' }}>
-              <input
-                type="text"
-                value={accessToken}
-                readOnly
-                style={{
-                  width: 440,
-                  maxWidth: '95vw',
-                  padding: '10px 12px',
-                  border: '1.5px solid #1976d2',
-                  borderRadius: 6,
-                  fontSize: 15,
-                  background: '#e3f2fd',
-                  color: '#333',
-                  fontFamily: 'monospace',
-                  textAlign: 'center'
-                }}
-              />
-              <button
-                onClick={handleCopyToken}
-                style={{
-                  background: copied ? '#43a047' : '#1976d2',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '10px 18px',
-                  fontWeight: 600,
-                  fontSize: 15,
-                  cursor: 'pointer',
-                  minWidth: 110
-                }}
-              >
-                {copied ? '✅ Copiado!' : '📋 Copiar'}
-              </button>
+        <div className="result-card">
+          <h2>✅ Token Gerado com Sucesso</h2>
+          
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            alignItems: 'stretch',
+            background: '#f8f9fa',
+            padding: '20px',
+            borderRadius: '12px',
+            border: '2px solid #28a745'
+          }}>
+            <input
+              type="text"
+              value={accessToken}
+              readOnly
+              style={{
+                flex: 1,
+                padding: '12px',
+                border: '1px solid #ced4da',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                fontFamily: 'monospace',
+                background: 'white',
+                color: '#333',
+                textAlign: 'center'
+              }}
+            />
+            <button
+              onClick={handleCopyToken}
+              className={`modern-btn ${copied ? 'success' : ''}`}
+              style={{ 
+                minWidth: '120px',
+                alignSelf: 'center'
+              }}
+            >
+              {copied ? '✅ Copiado!' : '📋 Copiar'}
+            </button>
+          </div>
+          
+          <div className="modern-alert success" style={{ marginTop: '16px' }}>
+            <span className="alert-icon">💡</span>
+            <div className="alert-content">
+              <div className="alert-title">Token pronto para uso</div>
+              <div>Este token pode ser usado nas outras funcionalidades da Cielo. Mantenha-o seguro!</div>
             </div>
           </div>
         </div>
@@ -1849,54 +1984,105 @@ function Pagamentos({ submenu }) {
   if (submenu !== 'gma') {
     return (
       <div className="bolepix-card">
-        <h1 style={{ textAlign: 'center', color: '#1976d2', marginBottom: 24 }}>Pagamentos - Pagamento POS Negado</h1>
+        <div className="pagamentos-header">
+          <h1>❌ Pagamentos - Pagamento POS Negado</h1>
+          <p className="subtitle">Consulte transações de pagamentos negadas no sistema POS</p>
+        </div>
         
-        {/* Formulário de Filtros */}
-        <form onSubmit={handleSubmit} style={{ background: '#f7f7f7', borderRadius: 12, padding: 32, marginBottom: 32, boxShadow: '0 2px 12px rgba(25,118,210,0.06)' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 20,
-            marginBottom: 24
-          }}>
-            <div>
-              <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Data Inicial</label>
-              <div style={{ position: 'relative' }}>
-                <input type="date" name="dtStart" value={filters.dtStart} onChange={handleChange} style={dateInputStyle} />
-                <span style={calendarIconStyle}>📅</span>
-              </div>
+        <form onSubmit={handleSubmit} className="pagamentos-form">
+          <div className="pagamentos-form-grid">
+            <div className="pagamentos-form-field">
+              <label>Data Inicial</label>
+              <input 
+                type="date" 
+                name="dtStart" 
+                value={filters.dtStart} 
+                onChange={handleChange}
+              />
+              <span className="calendar-icon">📅</span>
             </div>
-            <div>
-              <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Data Final</label>
-              <div style={{ position: 'relative' }}>
-                <input type="date" name="dtEnd" value={filters.dtEnd} onChange={handleChange} style={dateInputStyle} />
-                <span style={calendarIconStyle}>📅</span>
-              </div>
+            
+            <div className="pagamentos-form-field">
+              <label>Data Final</label>
+              <input 
+                type="date" 
+                name="dtEnd" 
+                value={filters.dtEnd} 
+                onChange={handleChange}
+              />
+              <span className="calendar-icon">📅</span>
             </div>
-            <div>
-              <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Valor Total</label>
-              <input type="number" name="total_amount" value={filters.total_amount} onChange={handleChange} placeholder="Ex: 41056" style={inputStyle} />
+            
+            <div className="pagamentos-form-field">
+              <label>Valor Total</label>
+              <input 
+                type="number" 
+                name="total_amount" 
+                value={filters.total_amount} 
+                onChange={handleChange} 
+                placeholder="Ex: 41056"
+              />
             </div>
-            <div>
-              <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>BIN (6 dígitos)</label>
-              <input type="text" name="transaction_bin" value={filters.transaction_bin} onChange={handleChange} maxLength={6} placeholder="6 dígitos" style={inputStyle} />
+            
+            <div className="pagamentos-form-field">
+              <label>BIN (6 dígitos)</label>
+              <input 
+                type="text" 
+                name="transaction_bin" 
+                value={filters.transaction_bin} 
+                onChange={handleChange} 
+                maxLength={6} 
+                placeholder="6 dígitos"
+              />
             </div>
-            <div>
-              <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>PAN (4 últimos)</label>
-              <input type="text" name="transaction_pan" value={filters.transaction_pan} onChange={handleChange} maxLength={4} placeholder="4 dígitos" style={inputStyle} />
+            
+            <div className="pagamentos-form-field">
+              <label>PAN (4 últimos)</label>
+              <input 
+                type="text" 
+                name="transaction_pan" 
+                value={filters.transaction_pan} 
+                onChange={handleChange} 
+                maxLength={4} 
+                placeholder="4 dígitos"
+              />
             </div>
-            <div>
-              <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>NSU</label>
-              <input type="text" name="transaction_nsu" value={filters.transaction_nsu} onChange={handleChange} placeholder="NSU" style={inputStyle} />
+            
+            <div className="pagamentos-form-field">
+              <label>NSU</label>
+              <input 
+                type="text" 
+                name="transaction_nsu" 
+                value={filters.transaction_nsu} 
+                onChange={handleChange} 
+                placeholder="NSU"
+              />
             </div>
-            <div>
-              <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Número de Autorização</label>
-              <input type="text" name="transaction_authorization_number" value={filters.transaction_authorization_number} onChange={handleChange} placeholder="Authorization Number" style={inputStyle} />
+            
+            <div className="pagamentos-form-field">
+              <label>Número de Autorização</label>
+              <input 
+                type="text" 
+                name="transaction_authorization_number" 
+                value={filters.transaction_authorization_number} 
+                onChange={handleChange} 
+                placeholder="Authorization Number"
+              />
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <button type="submit" style={{ padding: '14px 48px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 20, cursor: 'pointer', boxShadow: '0 2px 8px rgba(25,118,210,0.10)' }} disabled={loading}>
-              {loading ? 'Buscando...' : 'Buscar'}
+          
+          <div className="pagamentos-submit-container">
+            <button type="submit" className="pagamentos-submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  Buscando...
+                </>
+              ) : (
+                <>
+                  🔍 Buscar Pagamentos
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -2091,140 +2277,192 @@ function Pagamentos({ submenu }) {
 
   return (
     <div className="bolepix-card">
-      <h1 style={{ textAlign: 'center', color: '#1976d2', marginBottom: 24 }}>Pagamentos - Web / PIX (GMA)</h1>
-      <form onSubmit={handleSubmit} style={{ background: '#f7f7f7', borderRadius: 12, padding: 32, marginBottom: 32, boxShadow: '0 2px 12px rgba(25,118,210,0.06)' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 20,
-          marginBottom: 24
-        }}>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Data Inicial</label>
-            <div style={{ position: 'relative' }}>
-              <input type="date" name="dtStart" value={filters.dtStart} onChange={handleChange} style={dateInputStyle} />
-              <span style={calendarIconStyle}>📅</span>
-            </div>
+      <div className="pagamentos-header">
+        <h1>💳 Pagamentos - Web / PIX (GMA)</h1>
+        <p className="subtitle">Consulte transações de pagamentos via Web e PIX no sistema GMA</p>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="pagamentos-form">
+        <div className="pagamentos-form-grid">
+          <div className="pagamentos-form-field">
+            <label>Data Inicial</label>
+            <input 
+              type="date" 
+              name="dtStart" 
+              value={filters.dtStart} 
+              onChange={handleChange}
+            />
+            <span className="calendar-icon">📅</span>
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Data Final</label>
-            <div style={{ position: 'relative' }}>
-              <input type="date" name="dtEnd" value={filters.dtEnd} onChange={handleChange} style={dateInputStyle} />
-              <span style={calendarIconStyle}>📅</span>
-            </div>
+          
+          <div className="pagamentos-form-field">
+            <label>Data Final</label>
+            <input 
+              type="date" 
+              name="dtEnd" 
+              value={filters.dtEnd} 
+              onChange={handleChange}
+            />
+            <span className="calendar-icon">📅</span>
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Valor</label>
-            <input type="number" name="amount" value={filters.amount} onChange={handleChange} placeholder="Ex: 10005" style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Valor</label>
+            <input 
+              type="number" 
+              name="amount" 
+              value={filters.amount} 
+              onChange={handleChange} 
+              placeholder="Ex: 10005"
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Card BIN</label>
-            <input type="text" name="card_bin" value={filters.card_bin} onChange={handleChange} maxLength={6} placeholder="6 dígitos" style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Card BIN</label>
+            <input 
+              type="text" 
+              name="card_bin" 
+              value={filters.card_bin} 
+              onChange={handleChange} 
+              maxLength={6} 
+              placeholder="6 dígitos"
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Card Last</label>
-            <input type="text" name="card_last" value={filters.card_last} onChange={handleChange} maxLength={4} placeholder="4 dígitos" style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Card Last</label>
+            <input 
+              type="text" 
+              name="card_last" 
+              value={filters.card_last} 
+              onChange={handleChange} 
+              maxLength={4} 
+              placeholder="4 dígitos"
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Card Token</label>
-            <input type="text" name="card_token" value={filters.card_token} onChange={handleChange} style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Card Token</label>
+            <input 
+              type="text" 
+              name="card_token" 
+              value={filters.card_token} 
+              onChange={handleChange}
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Transaction ID</label>
-            <input type="text" name="transaction_id" value={filters.transaction_id} onChange={handleChange} style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Transaction ID</label>
+            <input 
+              type="text" 
+              name="transaction_id" 
+              value={filters.transaction_id} 
+              onChange={handleChange}
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Correlation ID</label>
-            <input type="text" name="correlation_id" value={filters.correlation_id} onChange={handleChange} style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Correlation ID</label>
+            <input 
+              type="text" 
+              name="correlation_id" 
+              value={filters.correlation_id} 
+              onChange={handleChange}
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Application Name</label>
-            <input type="text" name="application_name" value={filters.application_name} onChange={handleChange} style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Application Name</label>
+            <input 
+              type="text" 
+              name="application_name" 
+              value={filters.application_name} 
+              onChange={handleChange}
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Card Exp Date</label>
-            <input type="text" name="card_exp_date" value={filters.card_exp_date} onChange={handleChange} placeholder="MM/YYYY" style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Card Exp Date</label>
+            <input 
+              type="text" 
+              name="card_exp_date" 
+              value={filters.card_exp_date} 
+              onChange={handleChange} 
+              placeholder="MM/YYYY"
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>NSU</label>
-            <input type="text" name="nsu" value={filters.nsu} onChange={handleChange} placeholder="NSU" style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>NSU</label>
+            <input 
+              type="text" 
+              name="nsu" 
+              value={filters.nsu} 
+              onChange={handleChange} 
+              placeholder="NSU"
+            />
           </div>
-          <div>
-            <label style={{ fontWeight: 600, color: '#1976d2', marginBottom: 4, display: 'block' }}>Authorization Code</label>
-            <input type="text" name="authorization_code" value={filters.authorization_code} onChange={handleChange} placeholder="Authorization Code" style={inputStyle} />
+          
+          <div className="pagamentos-form-field">
+            <label>Authorization Code</label>
+            <input 
+              type="text" 
+              name="authorization_code" 
+              value={filters.authorization_code} 
+              onChange={handleChange} 
+              placeholder="Authorization Code"
+            />
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <button type="submit" style={{ padding: '14px 48px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 20, cursor: 'pointer', boxShadow: '0 2px 8px rgba(25,118,210,0.10)' }} disabled={loading}>
-            {loading ? 'Buscando...' : 'Buscar'}
+        
+        <div className="pagamentos-submit-container">
+          <button type="submit" className="pagamentos-submit" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                Buscando...
+              </>
+            ) : (
+              <>
+                🔍 Buscar Pagamentos
+              </>
+            )}
           </button>
         </div>
       </form>
       {error && <div className="error">{error}</div>}
       {results.length > 0 ? (
-        <div style={{ 
-          overflowX: 'auto', 
-          marginTop: 24,
-          maxWidth: '100%',
-          border: '1px solid #e0e0e0',
-          borderRadius: 8,
-          boxShadow: '0 2px 12px rgba(25,118,210,0.08)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, padding: '0 16px', marginTop: 16 }}>
-            <span style={{ color: '#1976d2', fontWeight: 600, fontSize: 16 }}>
-              Exibindo <b>{filteredResults.length}</b> registro(s)
-              {sortField && (
-                <span style={{ fontSize: 14, color: '#666', marginLeft: 8 }}>
-                  • Ordenado por: <b>{sortField.replace(/_/g, ' ').toUpperCase()}</b> ({sortDirection === 'asc' ? 'A-Z' : 'Z-A'})
-                </span>
-              )}
-            </span>
+        <div className="pagamentos-results-container">
+          <div className="pagamentos-results-header">
+            <div className="pagamentos-results-info">
+              <h2>📊 Resultados da Consulta</h2>
+              <div className="pagamentos-results-stats">
+                <div className="pagamentos-stat-item">
+                  📋 <strong>{filteredResults.length}</strong> registro(s) encontrado(s)
+                </div>
+                {sortField && (
+                  <div className="pagamentos-stat-item">
+                    🔄 Ordenado por: <strong>{sortField.replace(/_/g, ' ').toUpperCase()}</strong> ({sortDirection === 'asc' ? 'A-Z' : 'Z-A'})
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
-          {/* Campo de pesquisa */}
-          <div style={{ 
-            padding: '0 16px 16px 16px',
-            borderBottom: '1px solid #e0e0e0',
-            marginBottom: 16
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: '#f8f9fa',
-              borderRadius: 8,
-              padding: '8px 12px',
-              border: '1px solid #e0e0e0'
-            }}>
-              <span style={{ marginRight: 8, fontSize: 16 }}>🔍</span>
+          <div className="pagamentos-search-section">
+            <div className="pagamentos-search-container">
+              <span className="pagamentos-search-icon">🔍</span>
               <input
                 type="text"
                 placeholder="Buscar nos resultados..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  outline: 'none',
-                  fontSize: 14,
-                  width: '100%',
-                  color: '#333'
-                }}
+                className="pagamentos-search-input"
               />
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm('')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 16,
-                    color: '#666',
-                    padding: '4px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
+                  className="pagamentos-search-clear"
                   title="Limpar busca"
                 >
                   ✕
@@ -2232,116 +2470,55 @@ function Pagamentos({ submenu }) {
               )}
             </div>
           </div>
-          <table className="results-table" style={{ 
-            width: '100%', 
-            borderCollapse: 'collapse', 
-            background: '#fff', 
-            minWidth: 1200,
-            margin: 0
-          }}>
-            <thead>
-              <tr>
-                {Object.keys(results[0]).map(key => (
-                  <th
-                    key={key}
-                    title={key}
-                    onClick={() => handleSort(key)}
-                    style={{
-                      padding: 12,
-                      background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                      color: '#fff',
-                      border: '1px solid #e0e0e0',
-                      fontSize: 15,
-                      position: 'sticky',
-                      top: 0,
-                      zIndex: 2,
-                      maxWidth: 180,
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden',
-                      textAlign: 'center',
-                      fontWeight: 700,
-                      letterSpacing: 0.5,
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      transition: 'background 0.2s',
-                    }}
-                    onMouseOver={e => (e.currentTarget.style.background = 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)')}
-                    onMouseOut={e => (e.currentTarget.style.background = 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)')}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-                      <span title={key}>{key.replace(/_/g, ' ').toUpperCase()}</span>
-                      <span style={{ 
-                        fontSize: 18, 
-                        fontWeight: 'bold',
-                        color: sortField === key ? '#ffffff' : '#e3f2fd',
-                        background: sortField === key ? '#1976d2' : 'rgba(25,118,210,0.3)',
-                        borderRadius: '50%',
-                        width: 24,
-                        height: 24,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginLeft: 6,
-                        border: sortField === key ? '2px solid #ffffff' : '1px solid rgba(25,118,210,0.5)',
-                        boxShadow: sortField === key ? '0 2px 8px rgba(25,118,210,0.4)' : '0 1px 3px rgba(25,118,210,0.2)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        flexShrink: 0
-                      }}>
-                        {sortField === key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
-                      </span>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredResults.map((row, i) => (
-                <tr
-                  key={i}
-                  style={{
-                    background: i % 2 === 0 ? '#f7fafd' : '#fff',
-                    transition: 'background 0.2s',
-                    cursor: 'pointer',
-                  }}
-                  onMouseOver={e => (e.currentTarget.style.background = '#e3f0fc')}
-                  onMouseOut={e => (e.currentTarget.style.background = i % 2 === 0 ? '#f7fafd' : '#fff')}
-                >
-                  {Object.entries(row).map(([key, val], j) => {
-                    // Formatação de valores
-                    let displayVal = formatValue(val, key);
-                    // Truncar textos longos
-                    const isLong = typeof displayVal === 'string' && displayVal.length > 32;
-                    return (
-                      <td
-                        key={j}
-                        title={isLong ? displayVal : undefined}
-                        style={{
-                          padding: 12,
-                          border: '1px solid #e0e0e0',
-                          fontSize: 14,
-                          maxWidth: 180,
-                          whiteSpace: 'normal',
-                          wordWrap: 'break-word',
-                          overflow: 'hidden',
-                          textAlign: 'center',
-                          background: 'inherit',
-                          verticalAlign: 'top',
-                          lineHeight: '1.4'
-                        }}
-                      >
-                        {isLong ? displayVal.slice(0, 30) + '…' : displayVal}
-                      </td>
-                    );
-                  })}
+          
+          <div className="pagamentos-table-container">
+            <table className="pagamentos-table">
+              <thead>
+                <tr>
+                  {Object.keys(results[0]).map(key => (
+                    <th
+                      key={key}
+                      title={key}
+                      onClick={() => handleSort(key)}
+                    >
+                      <div className="header-content">
+                        <span>{key.replace(/_/g, ' ').toUpperCase()}</span>
+                        <span className={`sort-icon ${sortField === key ? 'active' : ''}`}>
+                          {sortField === key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                        </span>
+                      </div>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredResults.map((row, i) => (
+                  <tr key={i}>
+                    {Object.entries(row).map(([key, val], j) => {
+                      // Formatação de valores
+                      let displayVal = formatValue(val, key);
+                      // Truncar textos longos
+                      const isLong = typeof displayVal === 'string' && displayVal.length > 32;
+                      return (
+                        <td key={j} title={isLong ? displayVal : undefined}>
+                          {isLong ? displayVal.slice(0, 30) + '…' : displayVal}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
-        !loading && <div style={{ textAlign: 'center', color: '#bdbdbd', marginTop: 32, fontSize: 18 }}>Nenhum resultado encontrado.</div>
+        !loading && (
+          <div className="pagamentos-no-results">
+            <span className="icon">📋</span>
+            <h3>Nenhum resultado encontrado</h3>
+            <p>Tente ajustar os filtros de busca para encontrar transações.</p>
+          </div>
+        )
       )}
     </div>
   );

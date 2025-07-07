@@ -244,27 +244,19 @@ function UserManagement() {
   }
 
   return (
-    <div style={{ padding: '32px 0', maxWidth: '900px', margin: '0 auto' }}>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        marginBottom: '32px' 
-      }}>
-        <h1 style={{ color: '#1976d2', margin: 0, fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>Gerenciamento de Usuários</h1>
+    <div className="bolepix-card">
+      <div className="page-header">
+        <h1>👥 Gerenciamento de Usuários</h1>
+        <p className="subtitle">Administração de contas, permissões e controle de acesso ao sistema</p>
       </div>
 
       {error && (
-        <div style={{
-          background: '#ffebee',
-          color: '#c62828',
-          padding: '14px',
-          borderRadius: '8px',
-          marginBottom: '24px',
-          border: '1px solid #ffcdd2',
-          fontSize: 15
-        }}>
-          {error}
+        <div className="modern-alert error">
+          <span className="alert-icon">❌</span>
+          <div className="alert-content">
+            <div className="alert-title">Erro</div>
+            <div>{error}</div>
+          </div>
         </div>
       )}
 
@@ -405,27 +397,12 @@ function UserManagement() {
       </div>
 
       {/* Botão Adicionar Usuário */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        marginTop: '24px',
-        marginBottom: '32px' 
-      }}>
+      <div className="btn-container" style={{ marginTop: '24px', marginBottom: '32px' }}>
         <button
           onClick={() => setShowAddForm(true)}
-          style={{
-            background: '#1976d2',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: 16,
-            boxShadow: '0 2px 8px rgba(25, 118, 210, 0.08)'
-          }}
+          className="modern-btn"
         >
-          + Adicionar Usuário
+          👤 Adicionar Usuário
         </button>
       </div>
 

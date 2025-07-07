@@ -169,20 +169,72 @@ app.post('/api/bolepix', async (req, res) => {
   console.log('URL:', url);
   console.log('Headers:', headers);
 
+  const startTime = Date.now();
+  console.log('⏳ Iniciando requisição para API externa...');
+  
   try {
-    const response = await axios.get(url, { headers });
-    console.log('Sucesso! Status:', response.status);
+    
+    const response = await axios.get(url, { 
+      headers, 
+      timeout: 30000, // 30 segundos de timeout
+      validateStatus: function (status) {
+        return status < 500; // Aceita códigos de erro do cliente (4xx)
+      }
+    });
+    
+    const endTime = Date.now();
+    console.log(`✅ Sucesso! Status: ${response.status} em ${endTime - startTime}ms`);
     res.json(response.data);
   } catch (error) {
+    const endTime = Date.now();
     console.log('=== ERRO NA CONSULTA ===');
+    console.log(`❌ Erro após ${endTime - startTime}ms`);
+    
+    if (error.code === 'ECONNABORTED') {
+      console.log('❌ TIMEOUT: A API externa não respondeu em 30 segundos');
+      return res.status(504).json({ 
+        error: 'Timeout: A API externa não está respondendo. Tente novamente em alguns minutos.',
+        details: 'A API de pagamentos pode estar temporariamente indisponível.',
+        correlation_id: correlation_id
+      });
+    }
+    
+    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      console.log('❌ CONEXÃO: Não foi possível conectar à API externa');
+      return res.status(503).json({ 
+        error: 'Serviço indisponível: Não foi possível conectar à API de pagamentos.',
+        details: 'O serviço pode estar em manutenção. Tente novamente mais tarde.',
+        correlation_id: correlation_id
+      });
+    }
+    
     if (error.response) {
       console.log('Status:', error.response.status);
       console.log('Data:', error.response.data);
       console.log('Headers resposta:', error.response.headers);
-      res.status(error.response.status).json(error.response.data);
+      
+      // Se for erro 404, é provável que o correlation_id não existe
+      if (error.response.status === 404) {
+        return res.status(404).json({ 
+          error: 'Correlation ID não encontrado na base de dados.',
+          details: 'Verifique se o Correlation ID está correto.',
+          correlation_id: correlation_id
+        });
+      }
+      
+      res.status(error.response.status).json({
+        error: error.response.data?.error || 'Erro na API externa',
+        details: error.response.data,
+        correlation_id: correlation_id
+      });
     } else {
-      console.log('Erro sem resposta:', error.message);
-      res.status(500).json({ error: 'Erro ao consultar a API externa.' });
+      console.log('❌ Erro sem resposta:', error.message);
+      console.log('❌ Código do erro:', error.code);
+      res.status(500).json({ 
+        error: 'Erro interno: Falha na comunicação com a API externa.',
+        details: error.message,
+        correlation_id: correlation_id
+      });
     }
   }
 });

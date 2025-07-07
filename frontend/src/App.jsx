@@ -10,18 +10,23 @@ const formatCurrency = (value) => {
   if (!value) return 'R$ 0,00';
   
   // Converter para número se for string
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  let numValue;
+  if (typeof value === 'string') {
+    numValue = parseFloat(value);
+  } else {
+    numValue = value;
+  }
   
   if (isNaN(numValue)) return 'R$ 0,00';
   
-  // Dividir por 100 para converter centavos em reais (320 -> 3.20)
-  const valueInReais = numValue / 100;
+  // IMPORTANTE: O valor já vem em reais da API BolePix (ex: 1187.27)
+  // NÃO dividir por 100!
   
   // Formatar como moeda brasileira
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(valueInReais);
+  }).format(numValue);
 };
 
 function Home() {
@@ -437,14 +442,18 @@ function BolepixAE() {
     const { name, value } = e.target;
     setForm((prev) => {
       const updated = { ...prev, [name]: value };
-      // Se correlation_id foi alterado e tem 36 caracteres, faz a busca automática
-      if (name === 'correlation_id' && value.length === 36) {
-        handleCorrelationAutoFetch(value, updated);
-      } else if (name === 'correlation_id') {
-        // Limpa os campos se correlation_id for alterado para menos de 36 caracteres
-        updated.application_id = '';
-        updated.workspace_id = '';
-        updated.company_id = '';
+      
+      if (name === 'correlation_id') {
+        if (value.length === 36) {
+          // Se correlation_id foi alterado e tem 36 caracteres, faz a busca automática
+          console.log('🚀 Iniciando busca automática para:', value);
+          setTimeout(() => handleCorrelationAutoFetch(value, updated), 100);
+        } else {
+          // Limpa os campos se correlation_id for alterado para menos de 36 caracteres
+          updated.application_id = '';
+          updated.workspace_id = '';
+          updated.company_id = '';
+        }
       }
       return updated;
     });
@@ -480,18 +489,31 @@ function BolepixAE() {
 
   const handleCorrelationAutoFetch = async (correlationId, updatedForm) => {
     try {
-              const res = await fetch(`/api/correlation/${correlationId}`);
+      console.log('🔍 Buscando dados para correlation_id:', correlationId);
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`/api/correlation/${correlationId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
-        setForm({
+        console.log('✅ Dados encontrados:', data);
+        
+        const newForm = {
           ...updatedForm,
-          company_id: data.company_id,
-          application_id: data.application_id,
-          workspace_id: data.workspace_id,
-        });
+          company_id: data.company_id || '',
+          application_id: data.application_id || '',
+          workspace_id: data.workspace_id || '',
+        };
+        
+        console.log('📝 Atualizando formulário com:', newForm);
+        setForm(newForm);
+      } else {
+        console.log('❌ Erro na resposta:', res.status);
       }
     } catch (err) {
-      // Trate o erro se quiser
+      console.error('❌ Erro na busca:', err);
     }
   };
 

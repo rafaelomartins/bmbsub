@@ -149,23 +149,62 @@ function Antifraude() {
   const exportToCSV = () => {
     if (!result || result.length === 0) return;
     
-    const headers = Object.keys(result[0]).join(',');
-    const rows = result.map(row => 
-      Object.values(row).map(value => 
-        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-      ).join(',')
+    // Usar dados filtrados ao invés de todos os dados
+    const dataToExport = filteredData.length > 0 ? filteredData : result;
+    
+    // Filtrar colunas como na tabela
+    const visibleColumns = Object.keys(result[0]).filter(col => ![
+      'execution_stats', 'source_table', 'healthy_transaction', 'chargeback', 'chargeback_receipt_date', 'chargeback_payment_date', 'versao_layout_edi',
+      'authenticated_by_3ds', 'card_expired', 'is_fallback', 'fallback_details', 'customer_phone_numbers', 'customer_address_complement',
+      'context_productscustomer_address_state', 'customer_address_street', 'customer_address_zip_code', 'customer_address_number',
+      'customer_address_neighborhood', 'zero_dollar_authorization',
+      'customer_ip_address', 'as_network', 'as_number', 'as_organization', 'city_name', 'latitude', 'longitude', 'accuracy_radius',
+      'country_name', 'recurrent', 'analyzed_by_betrusty', 'el_request_time', 'context_products', 'cycle_id',
+      'analysis_id', 'recurrence_external_id', 'test_ab', 'transaction_approved', 'domain_id', 'hierarchy', 'customer_email', 'risk_score', 'customer_contract_number', 'customer_address_city', 'customer_address_state', 'context_invoices', 'context_tags', 'payment_currency'
+    ].includes(col));
+    
+    // Mapeamento dos nomes das colunas para CSV
+    const columnNameMap = {
+      'light': 'PARENT ALIAS',
+      'light_web': 'ALIAS',
+    };
+    
+    const headers = visibleColumns.map(col => columnNameMap[col] || col.replace(/_/g, ' ').toUpperCase()).join(',');
+    
+    const rows = dataToExport.map(row => 
+      visibleColumns.map(col => {
+        const value = row[col];
+        // Escapar valores que contêm vírgulas, quebras de linha ou aspas
+        if (typeof value === 'string' && (value.includes(',') || value.includes('\n') || value.includes('"'))) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value || '';
+      }).join(',')
     );
     
     const csvContent = [headers, ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
+    
+    const filterSuffix = searchTerm ? `_filtrado_${searchTerm}` : '';
     link.setAttribute('href', url);
-    link.setAttribute('download', `consulta_prevencao_${selectedTable}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `consulta_prevencao_${selectedTable}${filterSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Feedback para o usuário
+    const exportButton = document.querySelector('.btn-export');
+    const originalText = exportButton.innerHTML;
+    exportButton.innerHTML = '<span class="btn-icon">✅</span> CSV Exportado!';
+    exportButton.style.background = '#4caf50';
+    setTimeout(() => {
+      exportButton.innerHTML = originalText;
+      exportButton.style.background = '';
+    }, 2000);
   };
 
   // Filtrar e paginar dados

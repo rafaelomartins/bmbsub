@@ -9,3 +9,16 @@
 
         cd /home/rafael/Área\ de\ Trabalho/Dev-SUB/API-Consultas/backend
   node index.js
+
+
+  antifraude 02746476720
+  BolePIX 3b05e218-cfe3-408d-8c5a-e0c5443386f4
+
+  teste pagamentos web e pix gma
+nsu gma 049877
+aut 079241
+3.999,00 
+07/07
+
+Pagamentos - Pagamento POS Negado
+

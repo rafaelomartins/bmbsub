@@ -1,0 +1,6 @@
+   DB_USER=rafa.oliveira
+   DB_HOST=bi-telco.connector.datalake.bemobi.com
+   DB_NAME=master
+   DB_PASSWORD=Inicio@1
+   DB_PORT=5439
+   NODE_ENV=production

@@ -1006,15 +1006,66 @@ function CieloSolicitarCancelamento() {
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
   const [bodyEnviado, setBodyEnviado] = useState(null);
+  const [bodyCopied, setBodyCopied] = useState(false);
   
   // Estados para geração de token
   const [code, setCode] = useState('');
   const [tokenLoading, setTokenLoading] = useState(false);
   const [tokenError, setTokenError] = useState('');
 
+  // Função para formatar valor em centavos para exibição
+  const formatCurrencyInput = (centavos) => {
+    if (!centavos || centavos === '') return '';
+    
+    // Converter centavos para reais
+    const valorEmReais = parseFloat(centavos) / 100;
+    
+    // Formatar como moeda brasileira
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2
+    }).format(valorEmReais);
+  };
+
+  // Função para copiar o body para a área de transferência
+  const handleCopyBody = async () => {
+    if (!bodyEnviado) return;
+    
+    try {
+      const bodyText = JSON.stringify(bodyEnviado, null, 2);
+      await navigator.clipboard.writeText(bodyText);
+      setBodyCopied(true);
+      // Resetar o estado após 2 segundos
+      setTimeout(() => setBodyCopied(false), 2000);
+    } catch (err) {
+      // Fallback para navegadores mais antigos
+      const textArea = document.createElement('textarea');
+      textArea.value = JSON.stringify(bodyEnviado, null, 2);
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setBodyCopied(true);
+      setTimeout(() => setBodyCopied(false), 2000);
+    }
+  };
+
   // Função para formatar entrada de valor
   const handleValueChange = (e) => {
     let inputValue = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+    
+    // Permitir que o campo fique vazio quando o usuário apagar tudo
+    if (inputValue === '') {
+      setValue('');
+      return;
+    }
+    
+    // Limitar a 8 dígitos para evitar valores muito grandes
+    if (inputValue.length > 8) {
+      inputValue = inputValue.slice(0, 8);
+    }
+    
     setValue(inputValue); // Armazena o valor em centavos (ex: 320 para R$ 3,20)
   };
 
@@ -1076,6 +1127,7 @@ function CieloSolicitarCancelamento() {
     setLoading(true);
     setError('');
     setResult(null);
+    setBodyCopied(false);
     try {
       // Validações
       if (!token.trim()) {
@@ -1246,9 +1298,9 @@ function CieloSolicitarCancelamento() {
         <input
           type="text"
           id="value"
-          value={value ? formatCurrency(value) : ''}
+          value={formatCurrencyInput(value)}
           onChange={handleValueChange}
-          placeholder="0,00"
+          placeholder="R$ 0,00"
           required
         />
         <label htmlFor="transactionDate">Data da Transação</label>
@@ -1266,7 +1318,24 @@ function CieloSolicitarCancelamento() {
       {error && <div className="error">{error}</div>}
       {result && (
         <div className="result">
-          <b>Body enviado:</b>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <b>Body enviado:</b>
+            <button 
+              onClick={handleCopyBody}
+              style={{
+                padding: '4px 8px',
+                fontSize: '12px',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                backgroundColor: bodyCopied ? '#4caf50' : '#2196f3',
+                color: 'white',
+                transition: 'background-color 0.3s ease'
+              }}
+            >
+              {bodyCopied ? '✅ Copiado!' : '📋 Copiar'}
+            </button>
+          </div>
           <pre style={{textAlign:'left',background:'#f5f5f5',padding:'10px',borderRadius:'6px',marginTop:'10px',overflowX:'auto'}}>{JSON.stringify(bodyEnviado, null, 2)}</pre>
           <b>Resposta da API:</b>
           <pre style={{textAlign:'left',background:'#f5f5f5',padding:'10px',borderRadius:'6px',marginTop:'10px',overflowX:'auto'}}>{JSON.stringify(result, null, 2)}</pre>

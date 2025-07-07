@@ -850,6 +850,7 @@ h1 {
   font-size: 1rem;
   transition: all 0.3s ease;
   background: white;
+  color: #333;
 }
 
 .prevention-input:focus {
@@ -1050,6 +1051,7 @@ h1 {
   font-size: 1rem;
   transition: all 0.3s ease;
   background: white;
+  color: #333;
 }
 
 .search-input:focus {
@@ -1198,12 +1200,12 @@ h1 {
   vertical-align: top;
   min-width: 120px;
   max-width: 250px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   background: #fff;
   color: #333;
+  white-space: normal;
+  word-wrap: break-word;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .results-table tr:hover td {

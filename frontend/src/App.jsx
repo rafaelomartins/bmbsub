@@ -318,6 +318,46 @@ function Antifraude() {
                 </button>
               )}
             </div>
+            
+            <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => setSearchTerm('unauthorized')}
+                style={{
+                  padding: '8px 16px',
+                  background: searchTerm === 'unauthorized' ? '#d32f2f' : '#f44336',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={e => e.target.style.background = '#d32f2f'}
+                onMouseLeave={e => e.target.style.background = searchTerm === 'unauthorized' ? '#d32f2f' : '#f44336'}
+              >
+                🚫 Apenas Unauthorized
+              </button>
+              
+              <button 
+                onClick={() => setSearchTerm('')}
+                style={{
+                  padding: '8px 16px',
+                  background: searchTerm === '' ? '#1976d2' : '#2196f3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={e => e.target.style.background = '#1976d2'}
+                onMouseLeave={e => e.target.style.background = searchTerm === '' ? '#1976d2' : '#2196f3'}
+              >
+                📋 Todos os Resultados
+              </button>
+            </div>
           </div>
           
           <div className="table-container">
@@ -334,18 +374,29 @@ function Antifraude() {
                       'country_name', 'recurrent', 'analyzed_by_betrusty', 'el_request_time', 'context_products', 'cycle_id',
                       'analysis_id', 'recurrence_external_id', 'test_ab', 'transaction_approved', 'domain_id', 'hierarchy', 'customer_email', 'risk_score', 'customer_contract_number', 'customer_address_city', 'customer_address_state', 'context_invoices', 'context_tags', 'payment_currency'
                     ].includes(col))
-                    .map(col => (
-                      <th key={col} onClick={() => handleSort(col)} className="sortable-header">
-                        <div className="header-content">
-                          <span>{col.replace(/_/g, ' ').toUpperCase()}</span>
-                          {sortField === col && (
-                            <span className="sort-indicator">
-                              {sortDirection === 'asc' ? '↑' : '↓'}
-                            </span>
-                          )}
-                        </div>
-                      </th>
-                    ))}
+                    .map(col => {
+                      // Mapeamento dos nomes das colunas
+                      const columnNameMap = {
+                        'light': 'PARENT ALIAS',
+                        'light_web': 'ALIAS',
+                        // Adicione outros mapeamentos conforme necessário
+                      };
+                      
+                      const displayName = columnNameMap[col] || col.replace(/_/g, ' ').toUpperCase();
+                      
+                      return (
+                        <th key={col} onClick={() => handleSort(col)} className="sortable-header">
+                          <div className="header-content">
+                            <span>{displayName}</span>
+                            {sortField === col && (
+                              <span className="sort-indicator">
+                                {sortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      );
+                    })}
                 </tr>
               </thead>
               <tbody>
@@ -359,7 +410,7 @@ function Antifraude() {
                         'customer_address_neighborhood', 'zero_dollar_authorization',
                         'customer_ip_address', 'as_network', 'as_number', 'as_organization', 'city_name', 'latitude', 'longitude', 'accuracy_radius',
                         'country_name', 'recurrent', 'analyzed_by_betrusty', 'el_request_time', 'context_products', 'cycle_id',
-                        'analysis_id', 'recurrence_external_id', 'test_ab', 'transaction_approved', 'domain_id', 'hierarchy', 'customer_email', 'risk_score', 'customer_contract_number', 'customer_address_city', 'customer_address_state', 'context_invoices', 'context_tags'
+                        'analysis_id', 'recurrence_external_id', 'test_ab', 'transaction_approved', 'domain_id', 'hierarchy', 'customer_email', 'risk_score', 'customer_contract_number', 'customer_address_city', 'customer_address_state', 'context_invoices', 'context_tags', 'payment_currency'
                       ].includes(col))
                       .map(([key, val], j) => (
                         <td key={j} className={`cell-${key}`}>

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import './App.css'
 import bemobiLogo from './logobemobi.png'
-import Login from './Login'
 import UserManagement from './UserManagement'
 
 // Função para formatar valores em reais
@@ -2292,97 +2291,26 @@ const calendarIconStyle = {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // Sempre autenticado
+  const [user, setUser] = useState({
+    id: 1,
+    email: 'admin@bemobi.com',
+    name: 'Administrador',
+    role: 'admin',
+    permissions: ['home', 'antifraude', 'bolepix', 'cielo_gerar_token', 'cielo_solicitar_cancelamento', 'cielo_carta_cancelamento', 'cielo_cancelamento_pm', 'pagamentos_gma', 'pagamentos_posnegado', 'usuarios']
+  }); // Usuário padrão
+  const [loading, setLoading] = useState(false); // Não carregar
   
-  // Verificar autenticação ao carregar
+  // Remover verificação de autenticação
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('authToken');
-      const savedUser = localStorage.getItem('user');
-      
-      if (token && savedUser) {
-        try {
-          // Verificar se o token ainda é válido
-          const response = await fetch('/api/auth/verify', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (response.ok) {
-            setIsAuthenticated(true);
-            setUser(JSON.parse(savedUser));
-          } else {
-            // Token inválido, limpar localStorage
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-          }
-        } catch (error) {
-          console.error('Erro ao verificar autenticação:', error);
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-        }
-      }
-      setLoading(false);
-    };
-    
-    checkAuth();
+    // Sistema sem autenticação - acesso direto
   }, []);
 
-  const handleLogin = (data) => {
-    setIsAuthenticated(true);
-    setUser(data.user);
-  };
+  // Funções de autenticação removidas - sistema sem login
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-    setUser(null);
-  };
+  // Sistema sem autenticação - tokens não são mais necessários
 
-  // Função para adicionar token às requisições
-  const fetchWithAuth = async (url, options = {}) => {
-    const token = localStorage.getItem('authToken');
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Authorization': `Bearer ${token}`
-      }
-    });
-  };
-
-  // Mostrar loading enquanto verifica autenticação
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      }}>
-        <div style={{
-          background: '#fff',
-          padding: '40px',
-          borderRadius: '20px',
-          textAlign: 'center',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
-        }}>
-          <img src={bemobiLogo} alt="Bemobi" style={{ maxWidth: '150px', marginBottom: '20px' }} />
-          <p style={{ color: '#666', margin: '0' }}>Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Mostrar tela de login se não autenticado
-  if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
-  }
+  // Sistema sem autenticação - acesso direto
 
   return (
     <Router>
@@ -2467,25 +2395,6 @@ function App() {
               </span>
 
             </div>
-            
-            {/* Botão de logout */}
-            <button
-              onClick={handleLogout}
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => (e.target.style.background = 'rgba(255,255,255,0.2)')}
-              onMouseOut={(e) => (e.target.style.background = 'rgba(255,255,255,0.1)')}
-            >
-              🚪 Sair
-            </button>
             
             <button 
               className="mobile-menu-toggle" 

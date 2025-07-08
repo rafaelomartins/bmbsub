@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "portal-sub-api",
   "builds": [
     {
       "src": "frontend/package.json",
@@ -12,7 +13,7 @@
       "src": "backend/index.js",
       "use": "@vercel/node",
       "config": {
-        "maxLambdaSize": "10mb"
+        "maxLambdaSize": "15mb"
       }
     }
   ],
@@ -29,9 +30,5 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "functions": {
-    "backend/index.js": {
-      "maxDuration": 30
-    }
-  }
+  "regions": ["gru1"]
 } 

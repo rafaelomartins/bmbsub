@@ -96,3 +96,4 @@ test-pos-negado.js
 # Temporary files
 *.tmp
 *.temp 
+.vercel

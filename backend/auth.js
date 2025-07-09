@@ -14,8 +14,7 @@ const PERMISSIONS = {
   CIELO_CARTA_CANCELAMENTO: 'cielo_carta_cancelamento',
   CIELO_CANCELAMENTO_PM: 'cielo_cancelamento_pm',
   PAGAMENTOS_GMA: 'pagamentos_gma',
-  PAGAMENTOS_POSNEGADO: 'pagamentos_posnegado',
-  USUARIOS: 'usuarios'
+  PAGAMENTOS_POSNEGADO: 'pagamentos_posnegado'
 };
 
 // Usuários mockados (em produção, usar banco de dados)
@@ -131,143 +130,16 @@ const login = async (email, password) => {
   };
 };
 
-// Função para registrar novo usuário (apenas admin)
-const registerUser = async (email, password, name, role = 'user') => {
-  // Validar domínio de email
-  if (!validateBemobiEmail(email)) {
-    throw new Error('Apenas emails @bemobi.com são permitidos');
-  }
 
-  // Verificar se usuário já existe
-  const existingUser = users.find(u => u.email === email);
-  if (existingUser) {
-    throw new Error('Usuário já existe');
-  }
 
-  // Hash da senha
-  const hashedPassword = await hashPassword(password);
 
-  // Criar novo usuário
-  const newUser = {
-    id: users.length + 1,
-    email,
-    password: hashedPassword,
-    name,
-    role,
-    permissions: role === 'admin' ? Object.values(PERMISSIONS) : [] // Admin tem todas, usuário comum tem nenhuma
-  };
-
-  users.push(newUser);
-
-  return {
-    id: newUser.id,
-    email: newUser.email,
-    name: newUser.name,
-    role: newUser.role,
-    permissions: newUser.permissions
-  };
-};
-
-// Função para buscar todos os usuários (apenas admin)
-const getAllUsers = () => {
-  return users.map(user => ({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    permissions: user.permissions || []
-  }));
-};
-
-// Função para redefinir senha (apenas admin)
-const resetUserPassword = async (userId, newPassword) => {
-  const user = users.find(u => u.id === parseInt(userId));
-  if (!user) {
-    throw new Error('Usuário não encontrado');
-  }
-
-  // Hash da nova senha
-  const hashedPassword = await hashPassword(newPassword);
-  user.password = hashedPassword;
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    permissions: user.permissions || []
-  };
-};
-
-// Função para deletar usuário (apenas admin)
-const deleteUser = (userId) => {
-  const userIndex = users.findIndex(u => u.id === parseInt(userId));
-  if (userIndex === -1) {
-    throw new Error('Usuário não encontrado');
-  }
-
-  const user = users[userIndex];
-  if (user.role === 'admin') {
-    throw new Error('Não é possível deletar um administrador');
-  }
-
-  users.splice(userIndex, 1);
-  return { message: 'Usuário deletado com sucesso' };
-};
-
-// Função para atualizar permissões de usuário (apenas admin)
-const updateUserPermissions = (userId, permissions) => {
-  const user = users.find(u => u.id === parseInt(userId));
-  if (!user) {
-    throw new Error('Usuário não encontrado');
-  }
-
-  // Administradores sempre têm todas as permissões (não podem ser alteradas)
-  if (user.role === 'admin') {
-    user.permissions = Object.values(PERMISSIONS);
-  } else {
-    // Usuários normais: validar e aplicar apenas permissões válidas
-    const validPermissions = permissions.filter(p => Object.values(PERMISSIONS).includes(p));
-    user.permissions = validPermissions;
-  }
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    permissions: user.permissions
-  };
-};
-
-// Função para obter permissões disponíveis
-const getAvailablePermissions = () => {
-  return {
-    [PERMISSIONS.HOME]: 'Principal',
-    [PERMISSIONS.ANTIFRAUDE]: 'Consultas de Prevenção',
-    [PERMISSIONS.BOLEPIX]: 'Consulta BolePIX AE',
-    [PERMISSIONS.CIELO_GERAR_TOKEN]: 'Cielo - Gerar Token',
-    [PERMISSIONS.CIELO_SOLICITAR_CANCELAMENTO]: 'Cielo - Solicitar Cancelamento',
-    [PERMISSIONS.CIELO_CARTA_CANCELAMENTO]: 'Cielo - Carta de Cancelamento',
-    [PERMISSIONS.CIELO_CANCELAMENTO_PM]: 'Cielo - Cancelamento PM',
-    [PERMISSIONS.PAGAMENTOS_GMA]: 'Pagamentos - Web PIX (GMA)',
-    [PERMISSIONS.PAGAMENTOS_POSNEGADO]: 'Pagamentos - POS Negado',
-    [PERMISSIONS.USUARIOS]: 'Gerenciar Usuários'
-  };
-};
 
 module.exports = {
   login,
-  registerUser,
   authenticateToken,
   validateBemobiEmail,
   generateToken,
   verifyToken,
-  getAllUsers,
-  resetUserPassword,
-  deleteUser,
-  updateUserPermissions,
-  getAvailablePermissions,
   users,
   PERMISSIONS
 }; 

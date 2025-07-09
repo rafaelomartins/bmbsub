@@ -33,116 +33,16 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Rota para registrar novo usuário (apenas admin)
-app.post('/api/auth/register', authenticateToken, async (req, res) => {
-  // Verificar se o usuário é admin
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem registrar usuários' });
-  }
 
-  const { email, password, name, role } = req.body;
-
-  if (!email || !password || !name) {
-    return res.status(400).json({ error: 'Email, senha e nome são obrigatórios' });
-  }
-
-  try {
-    const newUser = await registerUser(email, password, name, role);
-    res.json({ message: 'Usuário registrado com sucesso', user: newUser });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
 
 // Rota para verificar token
 app.get('/api/auth/verify', authenticateToken, (req, res) => {
   res.json({ user: req.user });
 });
 
-// Rota para buscar todos os usuários (apenas admin)
-app.get('/api/auth/users', authenticateToken, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem acessar esta rota' });
-  }
-  
-  try {
-    const users = getAllUsers();
-    res.json({ users });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
-// Rota para redefinir senha (apenas admin)
-app.post('/api/auth/reset-password', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem redefinir senhas' });
-  }
 
-  const { userId, newPassword } = req.body;
 
-  if (!userId || !newPassword) {
-    return res.status(400).json({ error: 'ID do usuário e nova senha são obrigatórios' });
-  }
-
-  try {
-    const updatedUser = await resetUserPassword(userId, newPassword);
-    res.json({ message: 'Senha redefinida com sucesso', user: updatedUser });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Rota para deletar usuário (apenas admin)
-app.delete('/api/auth/users/:userId', authenticateToken, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem deletar usuários' });
-  }
-
-  const { userId } = req.params;
-
-  try {
-    const result = deleteUser(userId);
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Rota para atualizar permissões de usuário (apenas admin)
-app.put('/api/auth/users/:userId/permissions', authenticateToken, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem atualizar permissões' });
-  }
-
-  const { userId } = req.params;
-  const { permissions } = req.body;
-
-  if (!permissions || !Array.isArray(permissions)) {
-    return res.status(400).json({ error: 'Permissões devem ser fornecidas como um array' });
-  }
-
-  try {
-    const updatedUser = updateUserPermissions(userId, permissions);
-    res.json({ message: 'Permissões atualizadas com sucesso', user: updatedUser });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Rota para obter permissões disponíveis (apenas admin)
-app.get('/api/auth/permissions', authenticateToken, (req, res) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem acessar esta rota' });
-  }
-
-  try {
-    const permissions = getAvailablePermissions();
-    res.json({ permissions });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // Sistema sem autenticação - rotas abertas
 
@@ -426,89 +326,127 @@ app.post('/api/pagamentos/gma', async (req, res) => {
     application_name,
     card_exp_date,
     nsu,
-    authorization_code
+    authorization_code,
+    // Campos específicos do POS Negado (caso enviados por engano)
+    total_amount,
+    transaction_bin,
+    transaction_pan,
+    transaction_nsu,
+    transaction_authorization_number
   } = req.body;
 
   try {
     console.log('\n=== CONSULTA PAGAMENTOS GMA ===');
     console.log('Filtros recebidos:', req.body);
 
+    // Query base com INNER JOIN
     let query = `
-      SELECT 
-        correlation_id AS correlation_id_GMA,
-        transaction_id AS transaction_id_GMA,
-        workspace_id AS workspace_id_GMA,
-        pos AS pos_GMA,
-        "type",
-        amount AS Valor_GMA,
-        installments AS installments_GMA,
-        status AS status_GMA,
-        authorization_code AS authorization_code_GMA,
-        nsu AS nsu_GMA,
-        tokenized AS tokenized_GMA,
-        tid AS tid_GMA,
-        dt AS data_transacao_GMA,
-        card_token AS card_token_GMA,
-        card_exp_date AS card_exp_date_GMA
+      SELECT TOP 10
+        t.correlation_id AS correlation_id_GMA,
+        t.transaction_id AS transaction_id_GMA,
+        t.workspace_id AS workspace_id_GMA,
+        t.pos AS pos_GMA,
+        t."type",
+        t.amount AS Valor_GMA,
+        t.installments AS installments_GMA,
+        t.soft_descriptor,
+        t.status AS status_GMA,
+        t.authorization_code AS authorization_code_GMA,
+        t.nsu AS nsu_GMA,
+        t.tokenized AS tokenized_GMA,
+        t.tid AS tid_GMA,
+        t.dt AS data_transacao_GMA,
+        t.card_token AS card_token_GMA,
+        t.card_brand AS card_brand_GMA,
+        t.card_exp_date AS card_exp_date_GMA,
+        c.card_created_at,
+        c.card_brand_label,
+        c.card_bin,
+        c.card_last 
       FROM 
-        refined_payments.gma_transactions
-      WHERE 1=1
+        refined_payments.gma_transactions t
+      INNER JOIN 
+        refined_payments.eldorado_card c ON t.card_token = c.card_extuid 
+      WHERE
+        t.dt BETWEEN $1::date AND $2::date + INTERVAL '1 day'
     `;
+    
+    let params = [dtStart, dtEnd];
+    let paramIndex = 3;
 
-    const params = [];
-    let paramIndex = 1;
-
-    // Adicionar filtros dinamicamente
-    if (dtStart && dtEnd) {
-      // Usar filtros de data simples
-      query += ` AND dt >= $${paramIndex}::date AND dt < $${paramIndex + 1}::date + INTERVAL '1 day'`;
-      params.push(dtStart, dtEnd);
-      paramIndex += 2;
-    }
-
-    if (amount) {
-      query += ` AND amount = $${paramIndex}`;
-      params.push(amount);
+    // Filtro de valor (opcional)
+    if (amount && amount !== '') {
+      query += ` AND t.amount = $${paramIndex}`;
+      params.push(parseFloat(amount));
+      console.log('Filtro aplicado: amount =', amount);
       paramIndex++;
     }
 
-    if (card_token) {
-      query += ` AND card_token = $${paramIndex}`;
-      params.push(card_token);
+    // Filtro de card_bin (opcional)
+    if (card_bin && card_bin !== '') {
+      query += ` AND c.card_bin = $${paramIndex}`;
+      params.push(card_bin);
+      console.log('Filtro aplicado: card_bin =', card_bin);
       paramIndex++;
     }
 
-    if (transaction_id) {
-      query += ` AND transaction_id = $${paramIndex}`;
-      params.push(transaction_id);
+    // Filtro de card_last (opcional)
+    if (card_last && card_last !== '') {
+      query += ` AND c.card_last = $${paramIndex}`;
+      params.push(card_last);
+      console.log('Filtro aplicado: card_last =', card_last);
       paramIndex++;
     }
 
-    if (correlation_id) {
-      query += ` AND correlation_id = $${paramIndex}`;
-      params.push(correlation_id);
-      paramIndex++;
-    }
-
-    if (card_exp_date) {
-      query += ` AND card_exp_date = $${paramIndex}`;
+    // Filtro de card_exp_date (opcional)
+    if (card_exp_date && card_exp_date !== '') {
+      query += ` AND t.card_exp_date = $${paramIndex}`;
       params.push(card_exp_date);
+      console.log('Filtro aplicado: card_exp_date =', card_exp_date);
       paramIndex++;
     }
 
-    if (nsu) {
-      query += ` AND nsu = $${paramIndex}`;
-      params.push(nsu);
+    // Filtro de card_token (opcional)
+    if (card_token && card_token !== '') {
+      query += ` AND t.card_token = $${paramIndex}`;
+      params.push(card_token);
+      console.log('Filtro aplicado: card_token =', card_token);
       paramIndex++;
     }
 
-    if (authorization_code) {
-      query += ` AND authorization_code = $${paramIndex}`;
+    // Filtro de transaction_id (opcional)
+    if (transaction_id && transaction_id !== '') {
+      query += ` AND t.transaction_id = $${paramIndex}`;
+      params.push(transaction_id);
+      console.log('Filtro aplicado: transaction_id =', transaction_id);
+      paramIndex++;
+    }
+
+    // Filtro de correlation_id (opcional)
+    if (correlation_id && correlation_id !== '') {
+      query += ` AND t.correlation_id = $${paramIndex}`;
+      params.push(correlation_id);
+      console.log('Filtro aplicado: correlation_id =', correlation_id);
+      paramIndex++;
+    }
+
+    // Filtro de authorization_code (opcional)
+    if (authorization_code && authorization_code !== '') {
+      query += ` AND t.authorization_code = $${paramIndex}`;
       params.push(authorization_code);
+      console.log('Filtro aplicado: authorization_code =', authorization_code);
       paramIndex++;
     }
 
-    query += ' ORDER BY dt DESC LIMIT 10';
+    // Filtro de nsu (opcional)
+    if (nsu && nsu !== '') {
+      query += ` AND t.nsu = $${paramIndex}`;
+      params.push(nsu);
+      console.log('Filtro aplicado: nsu =', nsu);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY t.dt DESC`;
 
     console.log('Query final:', query);
     console.log('Parâmetros:', params);
@@ -517,53 +455,60 @@ app.post('/api/pagamentos/gma', async (req, res) => {
     
     console.log(`Registros encontrados: ${result.rows.length}`);
     
-    // Se não encontrou nenhum resultado mas há filtros aplicados, tentar uma busca mais ampla
-    if (result.rows.length === 0 && params.length > 0) {
-      console.log('⚠️ Nenhum resultado encontrado. Tentando busca mais ampla...');
-      
-      // Buscar registros similares baseados apenas em valor se fornecido
-      if (total_amount) {
-        const similarQuery = `
-          SELECT * FROM refined_ayla_smart.smart_bill_payment_pos_transactions 
-          WHERE total_amount BETWEEN $1 - 1000 AND $1 + 1000
-          ORDER BY ABS(total_amount - $1) ASC
-          LIMIT 10
-        `;
-        
-        const similarResult = await pool.query(similarQuery, [parseFloat(total_amount)]);
-        console.log(`Registros similares por valor: ${similarResult.rows.length}`);
-        
-        if (similarResult.rows.length > 0) {
-          return res.json({
-            original_results: result.rows,
-            similar_results: similarResult.rows,
-            message: `Nenhum resultado exato encontrado. Mostrando ${similarResult.rows.length} registros com valores similares a ${total_amount}.`
-          });
-        }
-      }
-      
-      // Se ainda não encontrou, mostrar alguns registros recentes com dados válidos
-      const fallbackQuery = `
-        SELECT * FROM refined_ayla_smart.smart_bill_payment_pos_transactions 
-        WHERE total_amount IS NOT NULL AND total_amount > 0
-        ORDER BY RANDOM()
-        LIMIT 5
-      `;
-      
-      const fallbackResult = await pool.query(fallbackQuery);
-      console.log(`Registros de exemplo: ${fallbackResult.rows.length}`);
-      
-      return res.json({
-        original_results: result.rows,
-        example_results: fallbackResult.rows,
-        message: `Nenhum resultado encontrado com os filtros aplicados. Mostrando ${fallbackResult.rows.length} registros de exemplo.`
-      });
-    }
-    
+    // Retornar apenas resultados exatos, sem busca ampla
     res.json(result.rows);
   } catch (err) {
     console.error('Erro na consulta GMA:', err);
     res.status(500).json({ error: 'Erro ao consultar o banco', details: err.message });
+  }
+});
+
+// Rota específica para testar um correlation_id
+app.get('/api/pagamentos/gma/test/:correlation_id', async (req, res) => {
+  const { correlation_id } = req.params;
+  
+  try {
+    console.log(`\n=== TESTE ESPECÍFICO CORRELATION_ID: ${correlation_id} ===`);
+    
+    // Busca exata
+    const exactQuery = await pool.query(`
+      SELECT COUNT(*) as exact_count
+      FROM refined_payments.gma_transactions 
+      WHERE correlation_id = $1
+    `, [correlation_id]);
+    
+    // Busca similar
+    const similarQuery = await pool.query(`
+      SELECT correlation_id, COUNT(*) as occurrences
+      FROM refined_payments.gma_transactions 
+      WHERE correlation_id LIKE $1
+      GROUP BY correlation_id
+      LIMIT 10
+    `, [`%${correlation_id}%`]);
+    
+    // Amostra de correlation_ids da tabela
+    const sampleQuery = await pool.query(`
+      SELECT DISTINCT correlation_id
+      FROM refined_payments.gma_transactions 
+      WHERE correlation_id IS NOT NULL
+      ORDER BY correlation_id
+      LIMIT 10
+    `);
+    
+    console.log('Resultado busca exata:', exactQuery.rows[0]);
+    console.log('Resultado busca similar:', similarQuery.rows);
+    console.log('Amostra de correlation_ids:', sampleQuery.rows);
+    
+    res.json({
+      target_correlation_id: correlation_id,
+      exact_matches: exactQuery.rows[0].exact_count,
+      similar_matches: similarQuery.rows,
+      sample_correlation_ids: sampleQuery.rows,
+      status: 'OK'
+    });
+  } catch (err) {
+    console.error('Erro no teste específico:', err);
+    res.status(500).json({ error: 'Erro ao testar correlation_id', details: err.message });
   }
 });
 
@@ -793,6 +738,106 @@ app.post('/api/pagamentos/posnegado', async (req, res) => {
     console.error('Erro na consulta POS Negado:', err);
     res.status(500).json({ error: 'Erro ao consultar o banco', details: err.message });
   }
+});
+
+// Rota para gerar token da Cielo
+app.post('/api/cielo/token', async (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ error: 'Code é obrigatório' });
+  }
+
+  try {
+    console.log('=== GERANDO TOKEN CIELO ===');
+    console.log('Code recebido:', code.substring(0, 10) + '...');
+
+    // Credenciais corretas da Cielo
+    const username = '69d136cb-f7ca-4f4e-850c-e5975d41dba6';
+    const password = 'e87a3e8f-6c0e-459f-b8d4-927c3c1c5dc1';
+    
+    // Encode credentials for Basic Auth
+    const credentials = Buffer.from(`${username}:${password}`).toString('base64');
+
+    // Dados para o token
+    const tokenData = {
+      grant_type: 'authorization_code',
+      code: code
+    };
+
+    console.log('Enviando requisição para Cielo...');
+    console.log('URL:', 'https://api2.cielo.com.br/consent/v1/oauth/access-token');
+    console.log('Body:', tokenData);
+
+    const response = await axios.post(
+      'https://api2.cielo.com.br/consent/v1/oauth/access-token',
+      tokenData,
+      {
+        headers: {
+          'Authorization': `Basic ${credentials}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+
+    console.log('✅ Token gerado com sucesso!');
+    console.log('Access token recebido:', response.data.access_token?.substring(0, 20) + '...');
+
+    res.json({
+      success: true,
+      access_token: response.data.access_token,
+      token_type: response.data.token_type,
+      expires_in: response.data.expires_in,
+      message: 'Token gerado com sucesso!'
+    });
+
+  } catch (error) {
+    console.error('❌ Erro ao gerar token Cielo:', error.response?.status, error.response?.statusText);
+    
+    if (error.response?.data) {
+      console.error('Detalhes do erro:', error.response.data);
+    }
+
+    const statusCode = error.response?.status || 500;
+    const errorMessage = error.response?.data?.error || 
+                        error.response?.data?.message || 
+                        'Erro interno do servidor';
+
+    res.status(statusCode).json({
+      error: 'Erro ao gerar token da Cielo',
+      details: errorMessage,
+      status: statusCode
+    });
+  }
+});
+
+// Rota temporária para listar authorization_code disponíveis para um valor/data
+app.get('/api/pagamentos/gma/autorizacoes', async (req, res) => {
+  const { dtStart, dtEnd, amount } = req.query;
+  if (!dtStart || !dtEnd || !amount) {
+    return res.status(400).json({ error: 'dtStart, dtEnd e amount são obrigatórios' });
+  }
+  try {
+    const query = `
+      SELECT authorization_code, amount, dt
+      FROM refined_payments.gma_transactions
+      WHERE dt >= $1::date AND dt < $2::date + INTERVAL '1 day' AND amount = $3
+      GROUP BY authorization_code, amount, dt
+      ORDER BY dt DESC
+      LIMIT 50
+    `;
+    const params = [dtStart, dtEnd, parseFloat(amount)];
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao consultar authorization_code', details: err.message });
+  }
+});
+
+// Rota de teste GET simples
+app.get('/api/teste-get', (req, res) => {
+  res.json({ ok: true, msg: 'GET funcionando' });
 });
 
 const PORT = process.env.PORT || 3001;

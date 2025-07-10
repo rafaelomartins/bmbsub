@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import bemobiLogo from './logobemobi.png';
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -73,15 +72,6 @@ function Login({ onLogin }) {
       }}>
         {/* Logo */}
         <div style={{ marginBottom: '30px' }}>
-          <img 
-            src={bemobiLogo} 
-            alt="Bemobi" 
-            style={{ 
-              maxWidth: '200px', 
-              height: 'auto',
-              marginBottom: '20px'
-            }} 
-          />
           <h1 style={{
             color: '#1976d2',
             fontSize: '24px',

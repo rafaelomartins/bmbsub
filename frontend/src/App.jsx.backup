@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import './App.css'
-import bemobiLogo from './logobemobi.png'
+import bmbIcon from './bmb.png';
 
 // Função para formatar valores em reais
 const formatCurrency = (value) => {
@@ -3087,7 +3087,7 @@ function App() {
       <div className="app-layout">
         <header className="top-navbar">
           <div className="navbar-brand">
-            <img src={bemobiLogo} alt="Bemobi" className="navbar-logo" />
+            <img src={bmbIcon} alt="Ícone BMB" className="navbar-logo" style={{height: 32, marginRight: 12}} />
             <span className="navbar-title">Portal de Consultas Subadquirência</span>
           </div>
           

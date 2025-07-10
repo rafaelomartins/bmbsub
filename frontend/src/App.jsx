@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import './App.css'
-import bemobiLogo from './logobemobi.png'
+import bmbIcon from './bmb.png'
 
 // Função para formatar valores em reais
 const formatCurrency = (value) => {
@@ -3333,8 +3333,11 @@ function Navbar({ user }) {
     <nav className="navbar">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
         <div className="navbar-brand">
-          <img src={bemobiLogo} alt="Bemobi" className="navbar-logo" />
-          <span className="navbar-title">Portal de Consultas Subadquirência</span>
+          <img src={bmbIcon} alt="Ícone BMB" className="navbar-logo" style={{height: 32, marginRight: 12}} />
+          <span className="navbar-title" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.1}}>
+            <span style={{fontWeight: 700}}>Portal de Consultas</span>
+            <span style={{fontWeight: 400, fontSize: '1.1em'}}>Subadquirência</span>
+          </span>
         </div>
         
         <div className={`navbar-menu ${menuOpen ? 'open' : ''}`}>
@@ -3392,7 +3395,15 @@ function Navbar({ user }) {
           onClick={() => setMenuOpen(v => !v)}
           aria-label="Toggle menu"
         >
-          {menuOpen ? '✖' : '☰'}
+          {menuOpen ? (
+            <span style={{ fontSize: '20px', fontWeight: 'bold' }}>✕</span>
+          ) : (
+            <span style={{ fontSize: '18px' }}>
+              <div style={{ width: '20px', height: '2px', background: 'white', margin: '4px 0' }}></div>
+              <div style={{ width: '20px', height: '2px', background: 'white', margin: '4px 0' }}></div>
+              <div style={{ width: '20px', height: '2px', background: 'white', margin: '4px 0' }}></div>
+            </span>
+          )}
         </button>
       </div>
     </nav>

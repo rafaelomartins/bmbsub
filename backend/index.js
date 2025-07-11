@@ -376,8 +376,8 @@ app.post('/api/pagamentos/gma', async (req, res) => {
 
     // Filtro de valor (opcional)
     if (amount && amount !== '') {
-      query += ` AND t.amount = $${paramIndex}`;
-      params.push(parseFloat(amount));
+      query += ` AND t.amount = $${paramIndex}::numeric`;
+      params.push(amount);
       console.log('Filtro aplicado: amount =', amount);
       paramIndex++;
     }
@@ -687,8 +687,8 @@ app.post('/api/pagamentos/posnegado', async (req, res) => {
       // Tentar converter para número se for string
       const amount = parseFloat(total_amount);
       if (!isNaN(amount)) {
-        query += ` AND total_amount = $${paramIndex}`;
-        params.push(amount);
+        query += ` AND total_amount = $${paramIndex}::numeric`;
+        params.push(total_amount);
         paramIndex++;
       } else {
         console.log(`⚠️ Valor inválido ignorado: ${total_amount}`);
@@ -822,12 +822,12 @@ app.get('/api/pagamentos/gma/autorizacoes', async (req, res) => {
     const query = `
       SELECT authorization_code, amount, dt
       FROM refined_payments.gma_transactions
-      WHERE dt >= $1::date AND dt < $2::date + INTERVAL '1 day' AND amount = $3
+      WHERE dt >= $1::date AND dt < $2::date + INTERVAL '1 day' AND amount = $3::numeric
       GROUP BY authorization_code, amount, dt
       ORDER BY dt DESC
       LIMIT 50
     `;
-    const params = [dtStart, dtEnd, parseFloat(amount)];
+    const params = [dtStart, dtEnd, amount];
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
